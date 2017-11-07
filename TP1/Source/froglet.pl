@@ -11,6 +11,61 @@ player(2).
 gameMode(pvp).
 
 /*
+*************************** GAME LOOPS ***************************
+*/
+
+
+/*
+*************************** GAME OVER ***************************
+*/
+
+%Checks if the game has ended.
+endGame(Board, Moves):-
+        validMoves(Board,[],Moves), write(Moves).
+
+%validMoves
+validMoves(Board,Moves, NewMoves):-
+	validMovesCol(Board,Moves, 0,0, NewMoves).
+
+validMoves(_, Moves, NewMoves):- NewMoves= Moves.
+
+validMovesCol(_,Moves,_,12,NewMoves):-
+	NewMoves=Moves.
+
+validMovesCol(Board,Moves, Row, Column,NewMoves):-
+	write(Row), write('-'), write(Column), nl,
+	Column < 12,
+	validMovesRow(Board, Moves, Row, Column,NewMoves1),
+	NewColumn is Column+1,
+	validMovesCol(Board, NewMoves1, Row, NewColumn,NewMoves).
+
+validMovesRow(_,Moves,12,_,NewMoves) :-
+	NewMoves=Moves.
+
+validMovesRow(Board,Moves, Row, Column, NewMoves):-
+	write(Row), write('-'), write(Column), nl,
+	Row < 12,
+	checkValidMoves(Board, Moves, Row, Column,NewMoves1),
+	NewRow is Row+1,
+	validMovesRow(Board,NewMoves1, NewRow, Column,NewMoves).
+
+
+checkValidMove(Board, Moves, Row, Column, DestRow, DestColumn, NewMoves):-
+	checkIfOutsideBoard(DestRow, DestColumn), validMove(DestRow, DestColumn, Row, Column, Board),
+	append([[Row - Column, DestRow - DestColumn]], Moves, NewMoves).
+
+checkValidMove(_Board, Moves, _Row, _Column, _DestRow, _DestColumn, NewMoves):-
+	NewMoves = Moves.
+
+checkValidMoves(Board, Moves, Row, Column, FinalMoves):-
+	NewLeft is Row-2, NewRight is Row+2, NewUp is Column+2, NewDown is Column-2,!,
+	checkValidMove(Board,Moves, Row, Column, NewLeft, Column, Moves1),!,
+	checkValidMove(Board,Moves1, Row, Column, NewRight, Column, Moves2),!,
+	checkValidMove(Board,Moves2, Row, Column, Row, NewUp, Moves3),!,
+	checkValidMove(Board,Moves3, Row, Column, Row, NewDown, FinalMoves).
+
+
+/*
 *************************** MOVEMENT ***************************
 */
 
@@ -79,7 +134,6 @@ validateDestiny(Row, Column, Board):-
            ), !.
 
 
-
 %Verifies if the move is valid
 validMove(DestRow, DestColumn, SrcRow, SrcCol, Board):-
         %check if movement itself is valid. First checks if it is a jump then a normal move.
@@ -108,7 +162,6 @@ isJump(SrcRow, SrcCol, DestRow, DestCol, Board):-
         delta(DestCol,SrcCol,Y),
         IColumn is SrcCol+Y,
         getMatrixElement(Board, IRow, IColumn, Frog),!,
-        write(Frog),
         not(isEmpty(Frog)),
 
         getMatrixElement(Board, DestRow, DestCol, CellF),!,
