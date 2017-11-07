@@ -20,8 +20,8 @@ gameMode(pvp).
 */
 
 %Checks if the game has ended.
-endGame(Board, Moves):-
-        validMoves(Board,[],Moves), write(Moves).
+endGame(Board):-
+        validMoves(Board,[],NewMoves),!,length(NewMoves,0).
 
 %validMoves
 validMoves(Board,Moves, NewMoves):-
