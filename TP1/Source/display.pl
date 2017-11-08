@@ -1,8 +1,8 @@
-convertToDisplay(0,' ').
-convertToDisplay(1,'G').
-convertToDisplay(2,'Y').
-convertToDisplay(3,'R').
-convertToDisplay(4,'B').
+convertToDisplay(0, ' ').
+convertToDisplay(1, 'G').
+convertToDisplay(2, 'Y').
+convertToDisplay(3, 'R').
+convertToDisplay(4, 'B').
 
 initial([
            [2,2,2,1,1,1,1,1,1,1,2,2],
@@ -106,9 +106,9 @@ displayBoard(Board) :-
         printColumnSeparatorLine(12, 0), nl,!,
         printBoard(Board, 1).
 
-
+%True if cell has 0 on it
 isEmpty(0).
 
-%checks if the coords are from outside the board's boundary
-checkIfOutsideBoard(Row, Column):-
+%Checks if the coords are from outside the board's boundaries
+checkIfOutsideBoard(Row, Column) :-
 	Row >= 0, Row < 12, Column >= 0, Column < 12.
