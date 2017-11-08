@@ -14,6 +14,13 @@ gameMode(pvp).
 *************************** GAME LOOPS ***************************
 */
 
+playGame :-
+        ongoing(Board),
+        repeat,
+		once(move(Board, 1, NewBoard)),
+        once(pickMove(NewBoard, 2, NewerBoard)),
+		once(displayBoard(Board)),
+        endGame(NewerBoard).
 
 /*
 *************************** GAME OVER ***************************
@@ -33,7 +40,6 @@ validMovesCol(_,Moves,_,12,NewMoves):-
 	NewMoves=Moves.
 
 validMovesCol(Board,Moves, Row, Column,NewMoves):-
-	write(Row), write('-'), write(Column), nl,
 	Column < 12,
 	validMovesRow(Board, Moves, Row, Column,NewMoves1),
 	NewColumn is Column+1,
@@ -43,7 +49,6 @@ validMovesRow(_,Moves,12,_,NewMoves) :-
 	NewMoves=Moves.
 
 validMovesRow(Board,Moves, Row, Column, NewMoves):-
-	write(Row), write('-'), write(Column), nl,
 	Row < 12,
 	checkValidMoves(Board, Moves, Row, Column,NewMoves1),
 	NewRow is Row+1,
@@ -51,8 +56,8 @@ validMovesRow(Board,Moves, Row, Column, NewMoves):-
 
 
 checkValidMove(Board, Moves, Row, Column, DestRow, DestColumn, NewMoves):-
-	checkIfOutsideBoard(DestRow, DestColumn), validMove(DestRow, DestColumn, Row, Column, Board),
-	append([[Row - Column, DestRow - DestColumn]], Moves, NewMoves).
+	checkIfOutsideBoard(DestRow, DestColumn), validMove(DestRow, DestColumn, Row, Column, Board,Points),
+	append([[Points,Row - Column, DestRow - DestColumn]], Moves, NewMoves).
 
 checkValidMove(_Board, Moves, _Row, _Column, _DestRow, _DestColumn, NewMoves):-
 	NewMoves = Moves.
@@ -80,18 +85,14 @@ move(Board,Player, FinalBoard):-
 	%selects the coordinates of where to move it
 	selectDestiny(DestRow, DestColumn, Board),
 
-        % isJump(Row, Column, DestRow,DestColumn, Board),
-        validMove(DestRow, DestColumn, Row, Column, Board),
-	moveFrog(Column, Row, DestColumn, DestRow, Board, FinalBoard, Player),
-
-        displayBoard(FinalBoard),
-	write('Press enter to continue'), nl,
-	waitForKey.
+  % isJump(Row, Column, DestRow,DestColumn, Board),
+  validMove(DestRow, DestColumn, Row, Column, Board, Points),
+	moveFrog(Column, Row, DestColumn, DestRow, Board, FinalBoard, Player).
 
 %Repeats until one source is valid
 selectSource(Row, Column, Board):-
 	repeat,
-	clearConsole,
+	%clearConsole,
 	%Gets the coordinates given by the user and validates the frog status
 	nl, write('Select a frog to move it.'), nl,
 	getCoords(Row, Column),
@@ -125,7 +126,6 @@ validateDestiny(Row, Column, Board):-
         checkIfOutsideBoard(Row, Column),
         %Gets the piece that the user selected.
         getMatrixElement(Board, Row, Column, Cell), !,
-        write(Cell),
         %evaluate if is a Cell is empty
         ite(
               isEmpty(Cell),
@@ -135,10 +135,10 @@ validateDestiny(Row, Column, Board):-
 
 
 %Verifies if the move is valid
-validMove(DestRow, DestColumn, SrcRow, SrcCol, Board):-
+validMove(DestRow, DestColumn, SrcRow, SrcCol, Board,Points):-
         %check if movement itself is valid. First checks if it is a jump then a normal move.
         ite(
-              isJump(SrcRow, SrcCol, DestRow, DestColumn, Board),
+              isJump(SrcRow, SrcCol, DestRow, DestColumn, Board,Points),
               ite(
                     validateMovement(SrcRow,SrcCol,DestRow,DestColumn),
                     true,
@@ -148,7 +148,7 @@ validMove(DestRow, DestColumn, SrcRow, SrcCol, Board):-
            ).
 
 %checks if the respective movement is a jump - between a frog and empty space.
-isJump(SrcRow, SrcCol, DestRow, DestCol, Board):-
+isJump(SrcRow, SrcCol, DestRow, DestCol, Board,Points):-
         abs(SrcRow-DestRow,RowDiff),
         abs(SrcCol-DestCol,ColDiff),
         xor(RowDiff == 2, ColDiff == 2),
@@ -161,8 +161,8 @@ isJump(SrcRow, SrcCol, DestRow, DestCol, Board):-
         IRow is SrcRow + X,
         delta(DestCol,SrcCol,Y),
         IColumn is SrcCol+Y,
-        getMatrixElement(Board, IRow, IColumn, Frog),!,
-        not(isEmpty(Frog)),
+        getMatrixElement(Board, IRow, IColumn, Points),!,
+        not(isEmpty(Points)),
 
         getMatrixElement(Board, DestRow, DestCol, CellF),!,
         isEmpty(CellF).
