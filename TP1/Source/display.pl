@@ -85,7 +85,7 @@ printLine([]).
 %Prints a line with padding
 printLine([First|Tail]) :-
         write('|  '),
-        convertToDisplay(First,X),
+        convertToDisplay(First, X),
         write(X),
         write('  '),
         printLine(Tail).

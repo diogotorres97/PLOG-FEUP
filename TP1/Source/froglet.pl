@@ -6,28 +6,43 @@
 :- use_module(library(lists)).
 
 :- dynamic currentPlayer/1.     %Current player turn
-:- dynamic player1Type/1.
-:- dynamic player2Type/1.
+:- dynamic player1Type/1.       %Player 1 type (CPU / Human)
+:- dynamic player2Type/1.       %Player 2 type (CPU / Human)
+
+:- dynamic greenCount/1.        %Green frog count for board generation
+:- dynamic yellowCount/1.       %Yellow frog count for board generation
+:- dynamic redCount/1.          %Red frog count for board generation
+:- dynamic blueCount/1.         %Blue frog count for board generation
 
 /**************************************************************************
                      Main game predicates and menus
 ***************************************************************************/
 
 playGame :-
-        setupGame,
-        ongoing(Board),
-        assert(currentPlayer(1)),
-        gameLoop(Board),
-        resetGame.
+         setupGame,
+         generateBoard([], FinalBoard, 12),
+         displayBoard(FinalBoard),
+%        ongoing(Board),
+%        assert(currentPlayer(1)),
+%        gameLoop(Board),
+         resetGame.
 
 setupGame :-
         assert(player1Type(cpu)),
-        assert(player2Type(cpu)).
+        assert(player2Type(cpu)),
+        assert(greenCount(0)),
+        assert(yellowCount(0)),
+        assert(redCount(0)),
+        assert(blueCount(0)).
 
 resetGame :-
         retractall(currentPlayer(_)),
         retractall(player1Type(_)),
-        retractall(player2Type(_)).
+        retractall(player2Type(_)),
+        retractall(greenCount(_)),
+        retractall(yellowCount(_)),
+        retractall(redCount(_)),
+        retractall(blueCount(_)).
 
 gameLoop(Board) :-
         displayBoard(Board),
@@ -58,6 +73,65 @@ writePlayer(Player) :-
 %Checks if the game has ended
 endGame(Board) :-
         validMoves(Board, [], NewMoves), !, length(NewMoves, 0).
+
+/**************************************************************************
+                        Board random generation
+***************************************************************************/
+
+%Generates a 12x12 board by calling the genLine predicate to get a full line and appends it to the intermediate board 12 times
+generateBoard(Board, FinalBoard, 0) :- FinalBoard = Board.
+
+generateBoard(Board, FinalBoard, Count) :-
+         genLine([], Line, 12),
+         append(Board, [Line], NewBoard),
+         NewCount is Count - 1,
+         generateBoard(NewBoard, FinalBoard, NewCount).
+
+%Generates a line for the board with 12 frogs
+genLine(Board, OutBoard, 0) :- OutBoard = Board.
+
+genLine(Board, OutBoard, Count) :-
+         genRandFrog(Frog),
+         append(Board, [Frog], NewBoard),
+         NewCount is Count - 1,
+         genLine(NewBoard, OutBoard, NewCount).
+
+%Picks a random frog and validates it by checking if it exceeds limit set by game rules
+genRandFrog(Frog) :-
+        random(1, 5, Frog),
+        validateFrog(Frog).
+
+%Validates green frog limit (66)
+validateFrog(1) :-
+        greenCount(Green),
+        retract(greenCount(_)),
+        NewGreen is Green + 1,
+        assert(greenCount(NewGreen)),
+        write('green: '), write(NewGreen), nl.
+
+%Validates yellow frog limit (51)
+validateFrog(2) :-
+        yellowCount(Yellow),
+        retract(yellowCount(_)),
+        NewYellow is Yellow + 1,
+        assert(yellowCount(NewYellow)),
+        write('yellow: '), write(NewYellow), nl.
+
+%Validates red frog limit (21)
+validateFrog(3) :-
+        redCount(Red),
+        retract(redCount(_)),
+        NewRed is Red + 1,
+        assert(redCount(NewRed)),
+        write('red: '), write(NewRed), nl.
+
+%Validates blue frog limit (6)
+validateFrog(4) :-
+        blueCount(Blue),
+        retract(blueCount(_)),
+        NewBlue is Blue + 1,
+        assert(blueCount(NewBlue)),
+        write('blue: '), write(NewBlue), nl.
 
 /**************************************************************************
                       Create list of valid moves
