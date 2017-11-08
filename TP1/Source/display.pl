@@ -4,6 +4,19 @@ convertToDisplay(2, 'Y').
 convertToDisplay(3, 'R').
 convertToDisplay(4, 'B').
 
+convertColumn(0, 'A').
+convertColumn(1, 'B').
+convertColumn(2, 'C').
+convertColumn(3, 'D').
+convertColumn(4, 'E').
+convertColumn(5, 'F').
+convertColumn(6, 'G').
+convertColumn(7, 'H').
+convertColumn(8, 'I').
+convertColumn(9, 'J').
+convertColumn(10, 'K').
+convertColumn(11, 'L').
+
 initial([
            [2,2,2,1,1,1,1,1,1,1,2,2],
            [1,3,3,3,3,2,2,1,1,2,2,2],

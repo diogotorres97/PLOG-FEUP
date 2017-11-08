@@ -6,31 +6,54 @@
 :- use_module(library(lists)).
 
 :- dynamic currentPlayer/1.     %Current player turn
+:- dynamic player1Type/1.
+:- dynamic player2Type/1.
 
 /**************************************************************************
                      Main game predicates and menus
 ***************************************************************************/
 
 playGame :-
+        setupGame,
         ongoing(Board),
         assert(currentPlayer(1)),
-        gameLoop(Board).
+        gameLoop(Board),
+        resetGame.
+
+setupGame :-
+        assert(player1Type(cpu)),
+        assert(player2Type(cpu)).
+
+resetGame :-
+        retractall(currentPlayer(_)),
+        retractall(player1Type(_)),
+        retractall(player2Type(_)).
 
 gameLoop(Board) :-
+        displayBoard(Board),
         currentPlayer(Player),
+        writePlayer(Player), nl,
         movement(Board, Player, NewBoard),
         displayBoard(NewBoard),
-        write('Current player:'), write(Player), nl,
         ite(endGame(NewBoard), true, gameLoop(NewBoard)).
 
 movement(Board, Player, NewBoard) :-
-        cpuMove(Board, Player, NewBoard, easy),
+        cpuMove(Board, Player, NewBoard, hard),
         togglePlayer(Player, NewPlayer),
         retract(currentPlayer(Player)),
         assert(currentPlayer(NewPlayer)).
 
 togglePlayer(Player, NewPlayer) :-
         ite(Player == 1, NewPlayer is 2, NewPlayer is 1).
+
+writePlayer(Player) :-
+        
+        write('Current player: '), write(Player),
+        ite(
+           currentPlayer(1),
+           ite(player1Type(cpu), write(' (CPU)'), write(' (Human)')),
+           ite(player2Type(cpu), write(' (CPU)'), write(' (Human)'))
+        ).
 
 %Checks if the game has ended
 endGame(Board) :-

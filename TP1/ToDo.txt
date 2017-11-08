@@ -1,5 +1,4 @@
 Game menu
-CPU show correct play numbers
 Add score
 Multiple jump (CPU / Player)
 Generate board
@@ -7,3 +6,10 @@ Pick 1st green frog
 Coordinate input fix
 Show valid initial positions
 Show last player (Player vs Player)
+
+Display
+	- Current Player (CPU or Player)
+	- Movement info if CPU
+	- Board
+	- Movement request if Human
+	- NewBoard

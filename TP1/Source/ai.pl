@@ -14,10 +14,14 @@ pickRandomMove(Board, PlayerNumber, FinalBoard) :-
     length(NewMoves, Length),
     random(0, Length, Value),
 
-    getMatrixElement(NewMoves, Value, 1, Xi-Yi), !,
-    write(Xi), write(' '), write(Yi), nl,
-    getMatrixElement(NewMoves, Value, 2, Xf-Yf), !,
-    write(Xf), write(' '), write(Yf), nl,
+    getMatrixElement(NewMoves, Value, 1, Xi - Yi), !,
+    getMatrixElement(NewMoves, Value, 2, Xf - Yf), !,
+
+    RowI is Xi + 1, RowF is Xf + 1,
+    convertColumn(Yi, ColumnI), convertColumn(Yf, ColumnF),
+
+    write('CPU Moves from ['), write(RowI), write(', '), write(ColumnI), write('] '),
+    write('to ['), write(RowF), write(', '), write(ColumnF), write(']'), nl,
 
     moveFrog(Yi, Xi, Yf, Xf, Board, FinalBoard, PlayerNumber),
 
@@ -33,11 +37,15 @@ pickBestMove(Board, PlayerNumber, FinalBoard) :-
   sort(NewMoves, OrderedMoves),
   Pos is Length - 1,
 
-  getMatrixElement(OrderedMoves, Pos, 1, Xi-Yi), !,
-  write(Xi), write(' '), write(Yi), nl,
-  getMatrixElement(OrderedMoves, Pos, 2, Xf-Yf), !,
-  write(Xf), write(' '), write(Yf), nl,
+  getMatrixElement(OrderedMoves, Pos, 1, Xi - Yi), !,
+  getMatrixElement(OrderedMoves, Pos, 2, Xf - Yf), !,
 
+  RowI is Xi + 1, RowF is Xf + 1,
+  convertColumn(Yi, ColumnI), convertColumn(Yf, ColumnF),
+
+  write('CPU Moves from ['), write(RowI), write(', '), write(ColumnI), write('] '),
+  write('to ['), write(RowF), write(', '), write(ColumnF), write(']'), nl,
+  
   moveFrog(Yi, Xi, Yf, Xf, Board, FinalBoard, PlayerNumber),
 
   write('Press enter to continue'), nl,
