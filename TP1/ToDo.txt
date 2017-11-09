@@ -1,13 +1,12 @@
 Game menu                          - 0%
 Add score                          - 0%
 Multiple jump (Player / CPU)       - 0%
-Generate board                     - 50%
-Pick 1st green frog (Player / CPU) - 0%
-Coordinate input fix               - 0%
-Show valid initial positions       - 0%
+Pick 1st green frog                - 50% (player can choose, CPU can't)
+Coordinate input fix               - 0% (>2 letter doesn't work, uppercase doesn't work)
+Show valid frogs                   - 0%
 Show last player (PvP)             - 0%
 
-Game Loop Display
+Game Loop Display                  - 20%
 	- Current Player (CPU or Player)
 	- Movement info if CPU
 	- Board

@@ -20,14 +20,15 @@
 
 playGame :-
          setupGame,
-         generateBoard([], FinalBoard, 12),
-         displayBoard(FinalBoard),
-%        ongoing(Board),
-%        assert(currentPlayer(1)),
-%        gameLoop(Board),
+         generateBoard([], Board, 12),
+         displayBoard(Board),
+         firstMove(Board, NewBoard),
+         displayBoard(NewBoard),
+         gameLoop(NewBoard),
          resetGame.
 
 setupGame :-
+        assert(currentPlayer(1)),
         assert(player1Type(cpu)),
         assert(player2Type(cpu)),
         assert(greenCount(0)),
@@ -187,6 +188,34 @@ checkValidMoves(Board, Moves, Row, Column, FinalMoves) :-
 /**************************************************************************
                       Player movement predicates
 ***************************************************************************/
+
+%Asks user to select a green frog to remove from board for starting the game
+firstMove(Board, FinalBoard) :-
+         selectFrog(Row, Column, Board),
+         replace(Board, Row, Column, 0, FinalBoard).
+
+%Gets frog coordinates from user, repeats until frog coordinates are of a green frog
+selectFrog(Row, Column, Board) :-
+        
+        repeat,
+        nl, write('Select a green frog to remove.'), nl,
+        getCoords(Row, Column),
+        validateFirstMove(Row, Column, Board), !.
+
+%Verifies if user supplied coordinates are inbounds and of a green frog
+validateFirstMove(Row, Column, Board) :-
+        
+        checkIfOutsideBoard(Row, Column),
+        
+        %Gets the piece that the user selected.
+        getMatrixElement(Board, Row, Column, Cell), !,
+        
+        %Evaluate if Cell is a green frog
+        ite(
+              Cell == 1,
+              true,
+              outputMessage('Not a green frog! Choose another one.')
+           ), !.
 
 %Predicate that is responsible for the player movement
 move(Board, Player, FinalBoard):-
