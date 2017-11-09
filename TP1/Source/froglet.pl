@@ -8,6 +8,8 @@
 :- dynamic currentPlayer/1.     %Current player turn
 :- dynamic player1Type/1.       %Player 1 type (CPU / Human)
 :- dynamic player2Type/1.       %Player 2 type (CPU / Human)
+:- dynamic cpu1Diff/1.          %CPU 1 difficulty
+:- dynamic cpu2Diff/1.          %CPU 2 difficulty
 
 :- dynamic greenCount/1.        %Green frog count for board generation
 :- dynamic yellowCount/1.       %Yellow frog count for board generation
@@ -21,12 +23,48 @@
 %Game entry point
 playGame :-
         setupGame,
-        generateBoard([], Board, 12),
-        displayBoard(Board),
-        firstMove(Board, NewBoard),
-        displayBoard(NewBoard),
-        gameLoop(NewBoard),
+        askCPUDiff(1),
+        askCPUDiff(2),
+        cpu1Diff(CPU1),
+        cpu2Diff(CPU2),
+        write(CPU1), nl,
+        write(CPU2), nl,
+%        write('Write difficulty: '), nl,
+%        read_line(Diff),
+%        write(Diff),
+%        Diff == "hello",
+%        write('hello world'), nl,
+%        generateBoard([], Board, 12),
+%        displayBoard(Board),
+%        cpuFirstMove(Board, NewBoard),
+%        firstMove(Board, NewBoard),
+%        displayBoard(NewBoard),
+%        gameLoop(NewBoard),
         resetGame.
+
+%Queries user for CPU difficulty, repeats until valid input
+askCPUDiff(PlayerNumber) :-
+        repeat,
+        
+        write('Choose difficulty for CPU '), write(PlayerNumber), nl,
+        write('1 - easy'), nl,
+        write('2 - hard'), nl,
+        
+        getCode(Input),
+        NumberInput is Input - 48,
+        verifyDiffInput(NumberInput),
+        storeCPUDiff(PlayerNumber, NumberInput).
+        
+%Asserts the difficulty according to user selection
+%storeCPUDiff(PlayerNumber, Option)
+storeCPUDiff(1, 1) :- assert(cpu1Diff(easy)).
+storeCPUDiff(1, 2) :- assert(cpu1Diff(hard)).
+storeCPUDiff(2, 1) :- assert(cpu2Diff(easy)).
+storeCPUDiff(2, 2) :- assert(cpu2Diff(hard)).
+
+%Verifies difficulty input
+verifyDiffInput(1).
+verifyDiffInput(2).
 
 %Setup game database
 setupGame :-
@@ -46,7 +84,9 @@ resetGame :-
         retractall(greenCount(_)),
         retractall(yellowCount(_)),
         retractall(redCount(_)),
-        retractall(blueCount(_)).
+        retractall(blueCount(_)),
+        retractall(cpu1Diff(_)),
+        retractall(cpu2Diff(_)).
 
 %Game loop
 gameLoop(Board) :-
@@ -112,42 +152,34 @@ genRandFrog(Frog) :-
 %Validates green frog limit (66)
 validateFrog(1) :-
         greenCount(Green),
-        ite(Green == 66,
-            fail,
-            (retract(greenCount(_)),
-            NewGreen is Green + 1,
-            assert(greenCount(NewGreen)))
-        ).
+        Green \== 66,
+        retract(greenCount(_)),
+        NewGreen is Green + 1,
+        assert(greenCount(NewGreen)).
 
 %Validates yellow frog limit (51)
 validateFrog(2) :-
         yellowCount(Yellow),
-        ite(Yellow == 51,
-            fail,
-            (retract(yellowCount(_)),
-            NewYellow is Yellow + 1,
-            assert(yellowCount(NewYellow)))
-        ).
+        Yellow \== 51,
+        retract(yellowCount(_)),
+        NewYellow is Yellow + 1,
+        assert(yellowCount(NewYellow)).
 
 %Validates red frog limit (21)
 validateFrog(3) :-
         redCount(Red),
-        ite(Red == 21,
-            fail,
-            (retract(redCount(_)),
-            NewRed is Red + 1,
-            assert(redCount(NewRed)))
-        ).
+        Red \== 21,
+        retract(redCount(_)),
+        NewRed is Red + 1,
+        assert(redCount(NewRed)).
 
 %Validates blue frog limit (6)
 validateFrog(4) :-
         blueCount(Blue),
-        ite(Blue == 6,
-            fail,
-            (retract(blueCount(_)),
-            NewBlue is Blue + 1,
-            assert(blueCount(NewBlue)))
-        ).
+        Blue \== 6,
+        retract(blueCount(_)),
+        NewBlue is Blue + 1,
+        assert(blueCount(NewBlue)).
 
 /**************************************************************************
                       Create list of valid moves

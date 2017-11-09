@@ -1,11 +1,10 @@
-Game menu                          - 0%
+Game menu                          - 20%
 Add score                          - 0%
 Multiple jump (Player / CPU)       - 0%
-Pick 1st green frog                - 50% (player can choose, CPU can't)
 Show valid frogs                   - 0%
 Show last player (PvP)             - 0%
 
-Game Loop Display                  - 20%
+Game Loop Display                  - 35%
 	- Current Player (CPU or Player)
 	- Movement info if CPU
 	- Board
@@ -15,5 +14,6 @@ Game Loop Display                  - 20%
 	- WaitEnter
 
 Testing
-	- Coordinate input
 	- Menus / Selections
+	- First move
+	- Coordinate input
