@@ -1,19 +1,18 @@
-Game menu                          - 20%
-Add score                          - 0%
-Multiple jump (Player / CPU)       - 0%
-Show valid frogs                   - 0%
-Show last player (PvP)             - 0%
+Add score                               - 0%
+Multiple jump (Player / CPU)            - 0%
+Show valid frogs                        - 0%
+Show last player (PvP)                  - 0%
 
-Game Loop Display                  - 35%
-	- Current Player (CPU or Player)
-	- Movement info if CPU
-	- Board
-	- WaitEnter if CPU
-	- Movement request if Human
-	- NewBoard
-	- WaitEnter
+Game Loop Display                       - 50%
+    - Current Player (CPU or Player)
+    - Movement info if CPU
+    - Board
+    - WaitEnter if CPU
+    - Movement request if Human
+    - NewBoard
+    - WaitEnter
 
 Testing
-	- Menus / Selections
-	- First move
-	- Coordinate input
+    - Menus / Selections
+    - First move
+    - Coordinate input

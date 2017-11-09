@@ -23,54 +23,29 @@
 %Game entry point
 playGame :-
         setupGame,
-        askCPUDiff(1),
-        askCPUDiff(2),
-        cpu1Diff(CPU1),
-        cpu2Diff(CPU2),
-        write(CPU1), nl,
-        write(CPU2), nl,
-%        write('Write difficulty: '), nl,
-%        read_line(Diff),
-%        write(Diff),
-%        Diff == "hello",
-%        write('hello world'), nl,
-%        generateBoard([], Board, 12),
-%        displayBoard(Board),
-%        cpuFirstMove(Board, NewBoard),
-%        firstMove(Board, NewBoard),
-%        displayBoard(NewBoard),
-%        gameLoop(NewBoard),
+        setupGameMenu,
+        generateBoard([], Board, 12),
+        displayBoard(Board),
+        doFirstMove(Board, NewBoard),
+        displayBoard(NewBoard),
+%        almost(NewBoard),
+        gameLoop(NewBoard),
         resetGame.
 
-%Queries user for CPU difficulty, repeats until valid input
-askCPUDiff(PlayerNumber) :-
-        repeat,
-        
-        write('Choose difficulty for CPU '), write(PlayerNumber), nl,
-        write('1 - easy'), nl,
-        write('2 - hard'), nl,
-        
-        getCode(Input),
-        NumberInput is Input - 48,
-        verifyDiffInput(NumberInput),
-        storeCPUDiff(PlayerNumber, NumberInput).
-        
-%Asserts the difficulty according to user selection
-%storeCPUDiff(PlayerNumber, Option)
-storeCPUDiff(1, 1) :- assert(cpu1Diff(easy)).
-storeCPUDiff(1, 2) :- assert(cpu1Diff(hard)).
-storeCPUDiff(2, 1) :- assert(cpu2Diff(easy)).
-storeCPUDiff(2, 2) :- assert(cpu2Diff(hard)).
+%Execute first move of the game depending on player 1 type
+doFirstMove(Board, NewBoard) :-
+        getCurrentPlayerType(1, Type),
+        doFirstMove(Board, Type, NewBoard).
 
-%Verifies difficulty input
-verifyDiffInput(1).
-verifyDiffInput(2).
+doFirstMove(Board, human, NewBoard) :-
+        firstMove(Board, NewBoard).
+
+doFirstMove(Board, cpu, NewBoard) :-
+        cpuFirstMove(Board, NewBoard).
 
 %Setup game database
 setupGame :-
         assert(currentPlayer(1)),
-        assert(player1Type(cpu)),
-        assert(player2Type(cpu)),
         assert(greenCount(0)),
         assert(yellowCount(0)),
         assert(redCount(0)),
@@ -91,31 +66,113 @@ resetGame :-
 %Game loop
 gameLoop(Board) :-
         displayBoard(Board),
-        currentPlayer(Player),
-        writePlayer(Player), nl,
-        movement(Board, Player, NewBoard),
+        currentPlayer(PlayerNumber),
+        writePlayer(PlayerNumber), nl,
+        movement(Board, PlayerNumber, NewBoard),
         displayBoard(NewBoard),
         ite(endGame(NewBoard), true, gameLoop(NewBoard)).
 
 %Ask for user / cpu move and toggle player
-movement(Board, Player, NewBoard) :-
-        cpuMove(Board, Player, NewBoard, hard),
-        togglePlayer(Player, NewPlayer),
-        retract(currentPlayer(Player)),
-        assert(currentPlayer(NewPlayer)).
-
-togglePlayer(Player, NewPlayer) :-
-        ite(Player == 1, NewPlayer is 2, NewPlayer is 1).
-
-%Write current player number and type
-writePlayer(Player) :-
+movement(Board, PlayerNumber, NewBoard) :-
         
-        write('Current player: '), write(Player),
-        ite(
-           currentPlayer(1),
-           ite(player1Type(cpu), write(' (CPU)'), write(' (Human)')),
-           ite(player2Type(cpu), write(' (CPU)'), write(' (Human)'))
-        ).
+        getCurrentPlayerType(PlayerNumber, Type),
+        doMove(Board, PlayerNumber, NewBoard, Type),
+        
+        togglePlayer(PlayerNumber, NewPlayerNumber),
+        retract(currentPlayer(PlayerNumber)),
+        assert(currentPlayer(NewPlayerNumber)).
+
+%Ask user for game type by querying about the player types and difficulties if CPU
+setupGameMenu :-
+        
+        askPlayerType(1),
+        askPlayerType(2),
+        player1Type(Type1),
+        player2Type(Type2),
+        
+        askCPUDiff(1, Type1),
+        askCPUDiff(2, Type2).
+
+%Queries user for player types, repeats until valid input
+askPlayerType(PlayerNumber) :-
+        
+        repeat,
+        
+        write('Choose player type for player '), write(PlayerNumber), nl,
+        write('1 - Human'), nl,
+        write('2 - Robot'), nl,
+        
+        read_line(Input),
+        verifyMenuInput(Input),
+        storePlayerType(PlayerNumber, Input).
+
+%Asserts the player type according to user selection
+%storePlayerType(PlayerNumber, Option)
+storePlayerType(1, "1") :- assert(player1Type(human)).
+storePlayerType(1, "2") :- assert(player1Type(cpu)).
+storePlayerType(2, "1") :- assert(player2Type(human)).
+storePlayerType(2, "2") :- assert(player2Type(cpu)).
+
+%If PlayerType is human no difficulty is needed from user, assume easy just for safety when trying to access CPU difficulty
+askCPUDiff(PlayerNumber, human) :- storeCPUDiff(PlayerNumber, "1").
+
+%Queries user for CPU difficulty, repeats until valid input
+%askCPUDiff(PlayerNumber, PlayerType)
+askCPUDiff(PlayerNumber, cpu) :-
+        repeat,
+        
+        write('Choose difficulty for CPU '), write(PlayerNumber), nl,
+        write('1 - easy'), nl,
+        write('2 - hard'), nl,
+        
+        read_line(Input),
+        verifyMenuInput(Input),
+        storeCPUDiff(PlayerNumber, Input).
+
+%Asserts the difficulty according to user selection
+%storeCPUDiff(PlayerNumber, Option)
+storeCPUDiff(1, "1") :- assert(cpu1Diff(easy)).
+storeCPUDiff(1, "2") :- assert(cpu1Diff(hard)).
+storeCPUDiff(2, "1") :- assert(cpu2Diff(easy)).
+storeCPUDiff(2, "2") :- assert(cpu2Diff(hard)).
+
+%Verifies menu input is a valid option
+verifyMenuInput("1").
+verifyMenuInput("2").
+
+%Get player type and return in Type
+getCurrentPlayerType(1, Type) :- player1Type(Type).
+getCurrentPlayerType(2, Type) :- player2Type(Type).
+
+%Get CPU difficulty and return in Diff
+getCPUDifficulty(1, Diff) :- cpu1Diff(Diff).
+getCPUDifficulty(2, Diff) :- cpu2Diff(Diff).
+
+%Chooses correct movement predicate depending on whether player is CPU or human
+doMove(Board, PlayerNumber, FinalBoard, cpu) :-
+        getCPUDifficulty(PlayerNumber, Diff),
+        cpuMove(Board, PlayerNumber, FinalBoard, Diff).
+
+doMove(Board, PlayerNumber, FinalBoard, human) :-
+        move(Board, PlayerNumber, FinalBoard).
+
+%Toggles player turn
+togglePlayer(1, 2).
+togglePlayer(2, 1).
+
+%Write current player number and type, does not print new line
+writePlayer(PlayerNumber) :-
+        
+        write('Current player: '), write(PlayerNumber), write(' '),
+        getCurrentPlayerType(PlayerNumber, Type),
+        getCPUDifficulty(PlayerNumber, Diff),
+        writePlayer(Type, Diff).
+
+writePlayer(human, _) :-
+        write('(Human)').
+
+writePlayer(cpu, Diff) :-
+        write('(CPU - '), write(Diff), write(')').
 
 %Checks if the game has ended
 endGame(Board) :-

@@ -62,7 +62,7 @@ getCoords(Row, Column) :-
         length(RowInput, Length),
 
         %Verify if list elements are greater than 0
-        ite(not(verifyListGT(OutList, 0)),
+        ite(not(verifyListGTE(OutList, 0)),
             Row is 12,
             ite(Length == 0,
                 Row is 12,
@@ -88,11 +88,11 @@ getCoords(Row, Column) :-
 ***************************************************************************/
 
 %Verify if all elements of list are greater than Value
-verifyListGT([], _).
+verifyListGTE([], _).
 
-verifyListGT([Head|Tail], Value) :-
-        Head > Value,
-        verifyListGT(Tail, Value).
+verifyListGTE([Head|Tail], Value) :-
+        Head >= Value,
+        verifyListGTE(Tail, Value).
 
 %Converts a list of digits to a number up to Length digits
 list_to_number(L, Length, Number) :-

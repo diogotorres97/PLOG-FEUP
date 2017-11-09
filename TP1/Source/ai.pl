@@ -3,8 +3,9 @@
 ***************************************************************************/
 
 %Selects a move according to the difficulty
-cpuMove(Board, PlayerNumber, FinalBoard, Difficulty) :-
-  ite(Difficulty == easy, pickRandomMove(Board, PlayerNumber, FinalBoard), pickBestMove(Board, PlayerNumber, FinalBoard)).
+cpuMove(Board, PlayerNumber, FinalBoard, easy) :- pickRandomMove(Board, PlayerNumber, FinalBoard).
+
+cpuMove(Board, PlayerNumber, FinalBoard, hard) :- pickBestMove(Board, PlayerNumber, FinalBoard).
 
 %Level 1 - cpu plays randomly from available moves
 pickRandomMove(Board, PlayerNumber, FinalBoard) :-
