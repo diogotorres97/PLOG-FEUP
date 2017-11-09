@@ -98,40 +98,49 @@ genLine(Board, OutBoard, Count) :-
 
 %Picks a random frog and validates it by checking if it exceeds limit set by game rules
 genRandFrog(Frog) :-
-        random(1, 5, Frog),
-        validateFrog(Frog).
+        repeat,
+        once(random(1, 5, Frog)),
+        once(validateFrog(Frog)).
 
 %Validates green frog limit (66)
 validateFrog(1) :-
         greenCount(Green),
-        retract(greenCount(_)),
-        NewGreen is Green + 1,
-        assert(greenCount(NewGreen)),
-        write('green: '), write(NewGreen), nl.
+        ite(Green == 66,
+            fail,
+            (retract(greenCount(_)),
+            NewGreen is Green + 1,
+            assert(greenCount(NewGreen)))
+        ).
 
 %Validates yellow frog limit (51)
 validateFrog(2) :-
         yellowCount(Yellow),
-        retract(yellowCount(_)),
-        NewYellow is Yellow + 1,
-        assert(yellowCount(NewYellow)),
-        write('yellow: '), write(NewYellow), nl.
+        ite(Yellow == 51,
+            fail,
+            (retract(yellowCount(_)),
+            NewYellow is Yellow + 1,
+            assert(yellowCount(NewYellow)))
+        ).
 
 %Validates red frog limit (21)
 validateFrog(3) :-
         redCount(Red),
-        retract(redCount(_)),
-        NewRed is Red + 1,
-        assert(redCount(NewRed)),
-        write('red: '), write(NewRed), nl.
+        ite(Red == 21,
+            fail,
+            (retract(redCount(_)),
+            NewRed is Red + 1,
+            assert(redCount(NewRed)))
+        ).
 
 %Validates blue frog limit (6)
 validateFrog(4) :-
         blueCount(Blue),
-        retract(blueCount(_)),
-        NewBlue is Blue + 1,
-        assert(blueCount(NewBlue)),
-        write('blue: '), write(NewBlue), nl.
+        ite(Blue == 6,
+            fail,
+            (retract(blueCount(_)),
+            NewBlue is Blue + 1,
+            assert(blueCount(NewBlue)))
+        ).
 
 /**************************************************************************
                       Create list of valid moves
