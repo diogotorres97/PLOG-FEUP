@@ -18,15 +18,17 @@
                      Main game predicates and menus
 ***************************************************************************/
 
+%Game entry point
 playGame :-
-         setupGame,
-         generateBoard([], Board, 12),
-         displayBoard(Board),
-         firstMove(Board, NewBoard),
-         displayBoard(NewBoard),
-         gameLoop(NewBoard),
-         resetGame.
+        setupGame,
+        generateBoard([], Board, 12),
+        displayBoard(Board),
+        firstMove(Board, NewBoard),
+        displayBoard(NewBoard),
+        gameLoop(NewBoard),
+        resetGame.
 
+%Setup game database
 setupGame :-
         assert(currentPlayer(1)),
         assert(player1Type(cpu)),
@@ -36,6 +38,7 @@ setupGame :-
         assert(redCount(0)),
         assert(blueCount(0)).
 
+%Reset game database to initial state
 resetGame :-
         retractall(currentPlayer(_)),
         retractall(player1Type(_)),
@@ -45,6 +48,7 @@ resetGame :-
         retractall(redCount(_)),
         retractall(blueCount(_)).
 
+%Game loop
 gameLoop(Board) :-
         displayBoard(Board),
         currentPlayer(Player),
@@ -53,6 +57,7 @@ gameLoop(Board) :-
         displayBoard(NewBoard),
         ite(endGame(NewBoard), true, gameLoop(NewBoard)).
 
+%Ask for user / cpu move and toggle player
 movement(Board, Player, NewBoard) :-
         cpuMove(Board, Player, NewBoard, hard),
         togglePlayer(Player, NewPlayer),
@@ -62,6 +67,7 @@ movement(Board, Player, NewBoard) :-
 togglePlayer(Player, NewPlayer) :-
         ite(Player == 1, NewPlayer is 2, NewPlayer is 1).
 
+%Write current player number and type
 writePlayer(Player) :-
         
         write('Current player: '), write(Player),

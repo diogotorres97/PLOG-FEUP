@@ -51,18 +51,71 @@ outputMessage(Message):-
         waitForKey, !,
         fail.
 
-%Asks the user to select coordinates from the board
+%Ask user for input on row number and column letter, converts it to numbers only
 getCoords(Row, Column) :-
         write('Row: '),
-        getCode(RowInput),
+        read_line(RowInput),
         write('Column: '),
-        getCode(ColInput),
-        Row is RowInput - 49,
-        Column is ColInput - 97.
+        read_line(ColumnInput),
+
+        add_list(RowInput, -48, OutList), %Convert ASCII to number, 48 is 0 in ASCII
+        length(RowInput, Length),
+
+        %Verify if list elements are greater than 0
+        ite(not(verifyListGT(OutList, 0)),
+            Row is 12,
+            ite(Length == 0,
+                Row is 12,
+                %Convert list to number up to 2 digits
+                ite(Length == 1,
+                    (list_to_number(OutList, 1, Number), Row is Number - 1),
+                    (list_to_number(OutList, 2, Number), Row is Number - 1)
+                   )
+               )
+           ),
+
+        %Convert Column ASCII to number
+        ite(nth0(0, ColumnInput, ColumnElem),
+            ite(ColumnElem > 96,
+                Column is ColumnElem - 97, %Lowercase
+                Column is ColumnElem - 65  %Uppercase
+               ),
+            Column is 12
+           ).
 
 /**************************************************************************
                             List manipulation
 ***************************************************************************/
+
+%Verify if all elements of list are greater than Value
+verifyListGT([], _).
+
+verifyListGT([Head|Tail], Value) :-
+        Head > Value,
+        verifyListGT(Tail, Value).
+
+%Converts a list of digits to a number up to Length digits
+list_to_number(L, Length, Number) :-
+    list_to_number(L, Length, 0, Number).
+
+list_to_number(_, 0, N, N).
+
+list_to_number([Head|Tail], Length, A, Number) :-
+    !,
+    NewA is A * 10 + Head,
+    NewLength is Length - 1,
+    list_to_number(Tail, NewLength, NewA, Number).
+
+%Adds value to all elements of list
+add_list(L, Value, FinalList) :-
+        add_list(L, Value, [], FinalList).
+
+add_list([], _, BuildList, BuildList).
+
+add_list([Head|Tail], Value, BuildList, FinalList) :-
+        NewValue is Value + Head,
+        append(BuildList, [NewValue], NewBuildList),
+        add_list(Tail, Value, NewBuildList, FinalList).
 
 %Receives Matrix and element position. Iterates through the lines until it finds the correct line and calls getRowElement
 getMatrixElement(_, Row, _, null) :-
