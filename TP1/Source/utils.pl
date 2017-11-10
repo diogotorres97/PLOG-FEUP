@@ -146,6 +146,20 @@ getRowElement([_|RestOfBoard], Column, Cell) :-
         NewColumn is Column - 1,
         getRowElement(RestOfBoard, NewColumn, Cell).
 
+%Returns a list with the full column of a list, reversed
+getMatrixColumn(List, ColNum, OutList) :-
+        length(List, NumRows),
+        StartingIndex is NumRows - 1,
+        getMatrixColumn(List, StartingIndex, ColNum, [], OutList).
+
+getMatrixColumn(_, -1, _, BuildList, BuildList).
+
+getMatrixColumn(List, A, ColNum, BuildList, OutList) :-
+        getMatrixElement(List, A, ColNum, Cell),
+        append(BuildList, [Cell], NewBuildList),
+        NewA is A - 1,
+        getMatrixColumn(List, NewA, ColNum, NewBuildList, OutList).
+
 %Replace element in 2D list
 %Once we find the desired row,
 replace([L|Ls], 0, Y, Z, [R|Ls]) :-

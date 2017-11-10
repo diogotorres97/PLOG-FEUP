@@ -1,6 +1,7 @@
 :- include('utils.pl').         %Utility predicates
 :- include('display.pl').       %Board display predicates
 :- include('ai.pl').            %CPU movement predicates
+:- include('test_boards.pl').   %Boards used for testing
 
 :- use_module(library(random)).
 :- use_module(library(lists)).
@@ -325,14 +326,19 @@ move(Board, Player, FinalBoard):-
 selectCell(Board, Type, Row, Column) :-
         
         repeat,
-        printSelection(Type),
+        printSelection(Board, Type),
         getCoords(Row, Column),
         validateSelection(Board, Type, Row, Column), !.
 
 %Prints info for the user according to type of selection
-printSelection(source) :- nl, write('Select a frog to jump.'), nl.
-printSelection(destination) :- nl, write('Jump to where?'), nl.
-printSelection(first) :- nl, write('Select a green frog to remove.'), nl.
+printSelection(Board, source) :-
+        nl, write('Select a frog to jump.'), nl,
+        validMoves(Board, [], NewMoves),
+        getMatrixColumn(NewMoves, 1, ColumnList),
+        printListAsCoords(ColumnList), nl.
+        
+printSelection(_, destination) :- nl, write('Jump to where?'), nl.
+printSelection(_, first) :- nl, write('Select a green frog to remove.'), nl.
 
 %Validates player input according to type of move
 %If source checks for non empty cell
