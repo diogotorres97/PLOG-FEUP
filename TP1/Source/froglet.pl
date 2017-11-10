@@ -342,12 +342,15 @@ validateSource(Row, Column, Board) :-
   	%Gets the piece that the user selected.
   	getMatrixElement(Board, Row, Column, Cell), !,
         
-  	%Evaluate if Cell is empty
-  	ite(
-  	      not(isEmpty(Cell)),
-  	      true,
-  	      outputMessage('Empty cell! Choose another one.')
-  	   ), !.
+        %Check if cell has a frog
+        verifySource(Cell).
+
+%Verifies cell selection, prints error message when chosen cell is empty
+verifySource(1).
+verifySource(2).
+verifySource(3).
+verifySource(4).
+verifySource(_) :- write('Empty cell! Choose another one.'), nl, fail.
 
 %Gets destination coordinates from user, repeats until destination coordinates are valid
 selectDestination(DestRow, DestColumn, Board) :-
@@ -365,12 +368,12 @@ validateDestination(Row, Column, Board) :-
         %Gets the piece that the user selected.
         getMatrixElement(Board, Row, Column, Cell), !,
         
-        %Evaluate if Cell is empty
-        ite(
-              isEmpty(Cell),
-              true,
-              outputMessage('Not an empty cell! Choose another one.')
-           ), !.
+        %Check if cell is empty
+        verifyDestination(Cell).
+
+%Verifies cell selection, prints error message when chosen cell isn't empty
+verifyDestination(0).
+verifyDestination(_) :- write('Not an empty cell! Choose another one.'), nl, fail.
 
 /**************************************************************************
                       Overall movement validation
