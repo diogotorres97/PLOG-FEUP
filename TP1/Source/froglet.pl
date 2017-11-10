@@ -295,7 +295,7 @@ selectFrog(Row, Column, Board) :-
         repeat,
         nl, write('Select a green frog to remove.'), nl,
         getCoords(Row, Column),
-        validateFirstMove(Row, Column, Board), !.
+        validateFirstMove(Row, Column, Board).
 
 %Verifies if user supplied coordinates are inbounds and of a green frog
 validateFirstMove(Row, Column, Board) :-
@@ -305,12 +305,12 @@ validateFirstMove(Row, Column, Board) :-
         %Gets the piece that the user selected.
         getMatrixElement(Board, Row, Column, Cell), !,
         
-        %Evaluate if Cell is a green frog
-        ite(
-              Cell == 1,
-              true,
-              outputMessage('Not a green frog! Choose another one.')
-           ), !.
+        %Check if cell is a green frog
+        verifyFirstMove(Cell).
+
+%Verifies first move, prints error message when move isn't valid
+verifyFirstMove(1).
+verifyFirstMove(_) :- write('Not a green frog! Choose another cell.'), nl, fail.
 
 %Predicate that is responsible for the player movement
 move(Board, Player, FinalBoard):-
@@ -323,7 +323,7 @@ move(Board, Player, FinalBoard):-
 	%Selects the coordinates of where to move previously chosen frog
 	selectDestination(DestRow, DestColumn, Board),
 
-        validMove(DestRow, DestColumn, Row, Column, Board, Points),
+        validMove(DestRow, DestColumn, Row, Column, Board, _),
 	moveFrog(Column, Row, DestColumn, DestRow, Board, FinalBoard, Player).
 
 %Gets source coordinates from user, repeats until source coordinates are valid
@@ -429,7 +429,7 @@ validateMovement(OriginRow, OriginCol, DestRow, DestCol) :-
 %Receives destination and source coordinates and updates frog coordinates on board
 moveFrog(FromCol, FromRow, ToCol, ToRow, Board, NewBoard, Player) :-
         
-        getMatrixElement(Board, FromRow, FromCol, Frog), %Save what Frog will move
+        getMatrixElement(Board, FromRow, FromCol, Frog), %Save which Frog will move
         replace(Board, FromRow, FromCol, 0, InterBoard),
 
         delta(ToRow, FromRow, X),
