@@ -11,6 +11,9 @@
 :- dynamic cpu1Diff/1.          %CPU 1 difficulty
 :- dynamic cpu2Diff/1.          %CPU 2 difficulty
 
+:- dynamic player1Score/1.      %Player 1 score
+:- dynamic player2Score/1.      %Player 2 score
+
 :- dynamic greenCount/1.        %Green frog count for board generation
 :- dynamic yellowCount/1.       %Yellow frog count for board generation
 :- dynamic redCount/1.          %Red frog count for board generation
@@ -25,13 +28,15 @@ playGame :-
         setupGame,
         setupGameMenu,
         generateBoard([], Board, 12),
-        
-        displayBoard(Board),
-        doFirstMove(Board, NewBoard),
-        displayBoard(NewBoard),
-        
+        firstMove(Board, NewBoard),
         gameLoop(NewBoard),
         resetGame.
+
+%First move of the game
+firstMove(Board, NewBoard) :-
+        displayBoard(Board),
+        doFirstMove(Board, NewBoard),
+        displayBoard(NewBoard).
 
 %Execute first move of the game depending on player 1 type
 doFirstMove(Board, NewBoard) :-
@@ -47,6 +52,8 @@ doFirstMove(Board, cpu, NewBoard) :-
 %Setup game database
 setupGame :-
         assert(currentPlayer(1)),
+        assert(player1Score(0)),
+        assert(player2Score(0)),
         assert(greenCount(0)),
         assert(yellowCount(0)),
         assert(redCount(0)),
@@ -57,21 +64,24 @@ resetGame :-
         retractall(currentPlayer(_)),
         retractall(player1Type(_)),
         retractall(player2Type(_)),
+        retractall(cpu1Diff(_)),
+        retractall(cpu2Diff(_)),
+        retractall(player1Score(_)),
+        retractall(player2Score(_)),
         retractall(greenCount(_)),
         retractall(yellowCount(_)),
         retractall(redCount(_)),
-        retractall(blueCount(_)),
-        retractall(cpu1Diff(_)),
-        retractall(cpu2Diff(_)).
+        retractall(blueCount(_)).
 
 %Game loop
 gameLoop(Board) :-
         displayBoard(Board),
         currentPlayer(PlayerNumber),
         writePlayer(PlayerNumber), nl,
+        writeScore, nl,
         movement(Board, PlayerNumber, NewBoard),
         displayBoard(NewBoard),
-        ite(endGame(NewBoard), true, gameLoop(NewBoard)).
+        ite(endGame(NewBoard), (writeScore, nl), gameLoop(NewBoard)).
 
 %Ask for user / cpu move and toggle player
 movement(Board, PlayerNumber, NewBoard) :-
@@ -102,6 +112,12 @@ doMove(Board, PlayerNumber, FinalBoard, human) :-
 %Toggles player turn
 togglePlayer(1, 2).
 togglePlayer(2, 1).
+
+%Writes current score for both players
+writeScore :-
+        player1Score(Score1),
+        player2Score(Score2),
+        write('P1 Score: '), write(Score1), write(' P2 Score: '), write(Score2).
 
 %Write current player number and type, does not print new line
 writePlayer(PlayerNumber) :-
@@ -333,10 +349,7 @@ verifySelection(1, first).
 verifySelection(_, first) :- write('Not a green frog! Choose another cell.'), nl, fail.
 
 %Verifies cell selection, prints error message when chosen cell is empty
-verifySelection(1, source).
-verifySelection(2, source).
-verifySelection(3, source).
-verifySelection(4, source).
+verifySelection(X, source) :- X \== 0.
 verifySelection(_, source) :- write('Empty cell! Choose another one.'), nl, fail.
 
 %Verifies cell selection, prints error message when chosen cell isn't empty
@@ -397,11 +410,11 @@ validateMovement(OriginRow, OriginCol, DestRow, DestCol) :-
 isEmpty(0).
 
 /**************************************************************************
-                      Board manipulation predicates
+                          Game state predicates
 ***************************************************************************/
 
 %Receives destination and source coordinates and updates frog coordinates on board
-moveFrog(FromCol, FromRow, ToCol, ToRow, Board, NewBoard, Player) :-
+moveFrog(FromCol, FromRow, ToCol, ToRow, Board, NewBoard, PlayerNumber) :-
         
         getMatrixElement(Board, FromRow, FromCol, Frog), %Save which Frog will move
         replace(Board, FromRow, FromCol, 0, InterBoard),
@@ -412,5 +425,20 @@ moveFrog(FromCol, FromRow, ToCol, ToRow, Board, NewBoard, Player) :-
         IColumn is FromCol + Y,
         getMatrixElement(Board, IRow, IColumn, Points), %Saves Points of move
         
+        updateScore(Points, PlayerNumber),
+        
         replace(InterBoard, IRow, IColumn, 0, InterBoard2),
         replace(InterBoard2, ToRow, ToCol, Frog, NewBoard).
+
+%Update player scores with points from latest move
+updateScore(Points, 1) :-
+        player1Score(OldScore),
+        retract(player1Score(_)),
+        NewScore is OldScore + Points,
+        assert(player1Score(NewScore)).
+
+updateScore(Points, 2) :-
+        player2Score(OldScore),
+        retract(player2Score(_)),
+        NewScore is OldScore + Points,
+        assert(player2Score(NewScore)).

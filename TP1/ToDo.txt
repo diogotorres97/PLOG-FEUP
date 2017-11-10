@@ -1,19 +1,13 @@
-Add score                               - 0%
-Multiple jump (Player / CPU)            - 0%
-Show valid frogs                        - 0%
-Show last player (PvP)                  - 0%
+Game display
+	- score
+	- current player
+	- last move
+	- board display before / after
+	- available initial positions if player
+	
+Multiple jump (Player / CPU)            -  0%
+Show valid initial positions            -  0%
+Show last move (Player / CPU)           - 50% (CPU done ; Player left)
+Callout winner of the game              -  0%
 Remove almost board from display
-
-Game Loop Display                       - 50%
-    - Current Player (CPU or Player)
-    - Movement info if CPU
-    - Board
-    - WaitEnter if CPU
-    - Movement request if Human
-    - NewBoard
-    - WaitEnter
-
 Testing
-    - Menus / Selections
-    - First move
-    - Coordinate input
