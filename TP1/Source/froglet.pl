@@ -25,10 +25,11 @@ playGame :-
         setupGame,
         setupGameMenu,
         generateBoard([], Board, 12),
+        
         displayBoard(Board),
         doFirstMove(Board, NewBoard),
         displayBoard(NewBoard),
-%        almost(NewBoard),
+        
         gameLoop(NewBoard),
         resetGame.
 
@@ -81,6 +82,48 @@ movement(Board, PlayerNumber, NewBoard) :-
         togglePlayer(PlayerNumber, NewPlayerNumber),
         retract(currentPlayer(PlayerNumber)),
         assert(currentPlayer(NewPlayerNumber)).
+
+%Get player type and return in Type
+getCurrentPlayerType(1, Type) :- player1Type(Type).
+getCurrentPlayerType(2, Type) :- player2Type(Type).
+
+%Get CPU difficulty and return in Diff
+getCPUDifficulty(1, Diff) :- cpu1Diff(Diff).
+getCPUDifficulty(2, Diff) :- cpu2Diff(Diff).
+
+%Chooses correct movement predicate depending on whether player is CPU or human
+doMove(Board, PlayerNumber, FinalBoard, cpu) :-
+        getCPUDifficulty(PlayerNumber, Diff),
+        cpuMove(Board, PlayerNumber, FinalBoard, Diff).
+
+doMove(Board, PlayerNumber, FinalBoard, human) :-
+        move(Board, PlayerNumber, FinalBoard).
+
+%Toggles player turn
+togglePlayer(1, 2).
+togglePlayer(2, 1).
+
+%Write current player number and type, does not print new line
+writePlayer(PlayerNumber) :-
+        
+        write('Current player: '), write(PlayerNumber), write(' '),
+        getCurrentPlayerType(PlayerNumber, Type),
+        getCPUDifficulty(PlayerNumber, Diff),
+        writePlayer(Type, Diff).
+
+writePlayer(human, _) :-
+        write('(Human)').
+
+writePlayer(cpu, Diff) :-
+        write('(CPU - '), write(Diff), write(')').
+
+%Checks if the game has ended
+endGame(Board) :-
+        validMoves(Board, [], NewMoves), !, length(NewMoves, 0).
+
+/**************************************************************************
+                              Setup menus
+***************************************************************************/
 
 %Ask user for game type by querying about the player types and difficulties if CPU
 setupGameMenu :-
@@ -139,44 +182,6 @@ storeCPUDiff(2, "2") :- assert(cpu2Diff(hard)).
 %Verifies menu input is a valid option
 verifyMenuInput("1").
 verifyMenuInput("2").
-
-%Get player type and return in Type
-getCurrentPlayerType(1, Type) :- player1Type(Type).
-getCurrentPlayerType(2, Type) :- player2Type(Type).
-
-%Get CPU difficulty and return in Diff
-getCPUDifficulty(1, Diff) :- cpu1Diff(Diff).
-getCPUDifficulty(2, Diff) :- cpu2Diff(Diff).
-
-%Chooses correct movement predicate depending on whether player is CPU or human
-doMove(Board, PlayerNumber, FinalBoard, cpu) :-
-        getCPUDifficulty(PlayerNumber, Diff),
-        cpuMove(Board, PlayerNumber, FinalBoard, Diff).
-
-doMove(Board, PlayerNumber, FinalBoard, human) :-
-        move(Board, PlayerNumber, FinalBoard).
-
-%Toggles player turn
-togglePlayer(1, 2).
-togglePlayer(2, 1).
-
-%Write current player number and type, does not print new line
-writePlayer(PlayerNumber) :-
-        
-        write('Current player: '), write(PlayerNumber), write(' '),
-        getCurrentPlayerType(PlayerNumber, Type),
-        getCPUDifficulty(PlayerNumber, Diff),
-        writePlayer(Type, Diff).
-
-writePlayer(human, _) :-
-        write('(Human)').
-
-writePlayer(cpu, Diff) :-
-        write('(CPU - '), write(Diff), write(')').
-
-%Checks if the game has ended
-endGame(Board) :-
-        validMoves(Board, [], NewMoves), !, length(NewMoves, 0).
 
 /**************************************************************************
                         Board random generation
@@ -286,94 +291,57 @@ checkValidMoves(Board, Moves, Row, Column, FinalMoves) :-
 
 %Asks user to select a green frog to remove from board for starting the game
 firstMove(Board, FinalBoard) :-
-         selectFrog(Row, Column, Board),
+        
+         selectCell(Board, first, Row, Column),
          replace(Board, Row, Column, 0, FinalBoard).
-
-%Gets frog coordinates from user, repeats until frog coordinates are of a green frog
-selectFrog(Row, Column, Board) :-
-        
-        repeat,
-        nl, write('Select a green frog to remove.'), nl,
-        getCoords(Row, Column),
-        validateFirstMove(Row, Column, Board).
-
-%Verifies if user supplied coordinates are inbounds and of a green frog
-validateFirstMove(Row, Column, Board) :-
-        
-        checkIfOutsideBoard(Row, Column),
-        
-        %Gets the piece that the user selected.
-        getMatrixElement(Board, Row, Column, Cell), !,
-        
-        %Check if cell is a green frog
-        verifyFirstMove(Cell).
-
-%Verifies first move, prints error message when move isn't valid
-verifyFirstMove(1).
-verifyFirstMove(_) :- write('Not a green frog! Choose another cell.'), nl, fail.
 
 %Predicate that is responsible for the player movement
 move(Board, Player, FinalBoard):-
         
         repeat,
-        
-	%Selects the frog to move and checks if it's possible to move it
-	selectSource(Row, Column, Board),
-
-	%Selects the coordinates of where to move previously chosen frog
-	selectDestination(DestRow, DestColumn, Board),
+        selectCell(Board, source, Row, Column), %Selects the frog to move and checks if it's possible to move it
+        selectCell(Board, destination, DestRow, DestColumn), %Selects the coordinates of where to move previously chosen frog
 
         validMove(DestRow, DestColumn, Row, Column, Board, _),
 	moveFrog(Column, Row, DestColumn, DestRow, Board, FinalBoard, Player).
 
-%Gets source coordinates from user, repeats until source coordinates are valid
-selectSource(Row, Column, Board) :-
+%Queries user for coordinates of the move, changes according to type which can be source or destination
+selectCell(Board, Type, Row, Column) :-
         
-	repeat,
-	nl, write('Select a frog to move.'), nl,
-	getCoords(Row, Column),
-        validateSource(Row, Column, Board), !.
+        repeat,
+        printSelection(Type),
+        getCoords(Row, Column),
+        validateSelection(Board, Type, Row, Column), !.
 
-%Verifies if source coordinates are valid
-validateSource(Row, Column, Board) :-
-        
-  	checkIfOutsideBoard(Row, Column),
-        
-  	%Gets the piece that the user selected.
-  	getMatrixElement(Board, Row, Column, Cell), !,
-        
-        %Check if cell has a frog
-        verifySource(Cell).
+%Prints info for the user according to type of selection
+printSelection(source) :- nl, write('Select a frog to jump.'), nl.
+printSelection(destination) :- nl, write('Jump to where?'), nl.
+printSelection(first) :- nl, write('Select a green frog to remove.'), nl.
 
-%Verifies cell selection, prints error message when chosen cell is empty
-verifySource(1).
-verifySource(2).
-verifySource(3).
-verifySource(4).
-verifySource(_) :- write('Empty cell! Choose another one.'), nl, fail.
-
-%Gets destination coordinates from user, repeats until destination coordinates are valid
-selectDestination(DestRow, DestColumn, Board) :-
-        
-	repeat,
-        nl, write('Move frog where?'), nl,
-        getCoords(DestRow, DestColumn),
-        validateDestination(DestRow, DestColumn, Board), !.
-
-%Verifies if destination coordinates are valid
-validateDestination(Row, Column, Board) :-
+%Validates player input according to type of move
+%If source checks for non empty cell
+%If destination checks for empty cell
+%If first checks for a green frog
+validateSelection(Board, Type, Row, Column) :-
         
         checkIfOutsideBoard(Row, Column),
-        
-        %Gets the piece that the user selected.
         getMatrixElement(Board, Row, Column, Cell), !,
-        
-        %Check if cell is empty
-        verifyDestination(Cell).
+        verifySelection(Cell, Type). %Verifies selection stored in Cell
+
+%Verifies cell selection, prints error message when chosen cell isn't a green frog
+verifySelection(1, first).
+verifySelection(_, first) :- write('Not a green frog! Choose another cell.'), nl, fail.
+
+%Verifies cell selection, prints error message when chosen cell is empty
+verifySelection(1, source).
+verifySelection(2, source).
+verifySelection(3, source).
+verifySelection(4, source).
+verifySelection(_, source) :- write('Empty cell! Choose another one.'), nl, fail.
 
 %Verifies cell selection, prints error message when chosen cell isn't empty
-verifyDestination(0).
-verifyDestination(_) :- write('Not an empty cell! Choose another one.'), nl, fail.
+verifySelection(0, destination).
+verifySelection(_, destination) :- write('Not an empty cell! Choose another one.'), nl, fail.
 
 /**************************************************************************
                       Overall movement validation
@@ -424,6 +392,9 @@ validateMovement(OriginRow, OriginCol, DestRow, DestCol) :-
 	TotalDiff is RowDiff + ColDiff,
 	TotalDiff == 2,
         (RowDiff == 0 ; ColDiff == 0).
+
+%True if 0
+isEmpty(0).
 
 /**************************************************************************
                       Board manipulation predicates

@@ -133,9 +133,6 @@ displayBoard(Board) :-
         printColumnSeparatorLine(12, 0), nl,!,
         printBoard(Board, 1).
 
-%True if cell has 0 on it
-isEmpty(0).
-
 %Checks if the coords are from outside the board's boundaries
 checkIfOutsideBoard(Row, Column) :-
 	Row >= 0, Row < 12, Column >= 0, Column < 12.
