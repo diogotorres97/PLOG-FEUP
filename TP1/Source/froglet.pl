@@ -28,12 +28,12 @@ playGame :-
         setupGame,
         setupGameMenu,
         generateBoard([], Board, 12),
-        firstMove(Board, NewBoard),
+        firstMoveMenu(Board, NewBoard),
         gameLoop(NewBoard),
         resetGame.
 
 %First move of the game
-firstMove(Board, NewBoard) :-
+firstMoveMenu(Board, NewBoard) :-
         displayBoard(Board),
         doFirstMove(Board, NewBoard),
         displayBoard(NewBoard).
