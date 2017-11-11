@@ -6,7 +6,6 @@ Game display
 	- available initial positions if player (prettify this)
 
 Mini refactor
-CPU easy random multiple jump
 Show last move from human player
 Callout winner of the game
 Testing

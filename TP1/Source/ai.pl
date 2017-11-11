@@ -5,13 +5,14 @@
 %Level 1 - cpu plays randomly from available moves, does not do multiple jumps
 cpuMove(Board, PlayerNumber, FinalBoard, easy) :- 
     findMove(Board, easy, Moves, Index),
-    cpuDoMove(Board, Moves, Index, _, _, PlayerNumber, FinalBoard).
+    cpuDoMove(Board, Moves, Index, PreviousX, PreviousY, PlayerNumber, NewBoard),
+    doCPUMultipleJump(NewBoard, easy-multiple, PreviousX, PreviousY, PlayerNumber, FinalBoard).
 
 %Level 2 - greedy approach, cpu plays the best move available but does not predict future board states, does multiple jumps
 cpuMove(Board, PlayerNumber, FinalBoard, hard) :-
     findMove(Board, hard, Moves, Index),
     cpuDoMove(Board, Moves, Index, PreviousX, PreviousY, PlayerNumber, NewBoard),
-    doCPUMultipleJump(NewBoard, PreviousX, PreviousY, PlayerNumber, FinalBoard).
+    doCPUMultipleJump(NewBoard, hard-multiple, PreviousX, PreviousY, PlayerNumber, FinalBoard).
 
 %Receives move and changes game state based on it, waits for user input to confirm move
 cpuDoMove(Board, Moves, Index, Xf, Yf, PlayerNumber, FinalBoard) :-
@@ -25,19 +26,22 @@ cpuDoMove(Board, Moves, Index, Xf, Yf, PlayerNumber, FinalBoard) :-
     waitForKey, clearConsole.
 
 %Handles multiple jump scenario for CPU player
-doCPUMultipleJump(Board, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
+doCPUMultipleJump(Board, Diff, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
     checkValidMoves(Board, [], InitRow, InitColumn, AvailMoves),
     length(AvailMoves, NumMoves),
-    NumMoves > 0, !,
+    NumMoves > 0,
     displayBoard(Board),
 
+    findMove(Board, Diff, InitRow, InitColumn, Moves, Index),
+    length(Moves, Length),
+    Length > 0, !,
     write('CPU Multiple jump!'), nl,
-    findMove(Board, hard-multiple, InitRow, InitColumn, Moves, Index),
+
     cpuDoMove(Board, Moves, Index, PreviousX, PreviousY, PlayerNumber, NewBoard),
 
-    doCPUMultipleJump(NewBoard, PreviousX, PreviousY, PlayerNumber, FinalBoard).
+    doCPUMultipleJump(NewBoard, Diff, PreviousX, PreviousY, PlayerNumber, FinalBoard).
 
-doCPUMultipleJump(Board, _, _, _, FinalBoard) :- FinalBoard = Board.
+doCPUMultipleJump(Board, _, _, _, _, FinalBoard) :- FinalBoard = Board.
 
 %Writes CPU jump in user friendly way
 writeCPUMove(Xi, Yi, Xf, Yf) :-
@@ -66,6 +70,16 @@ findMove(Board, hard, Moves, Index) :-
     length(AvailMoves, Length),
     sort(AvailMoves, Moves),
     Index is Length - 1.
+
+%Easy multiple jump - chooses randomly whether to do multiple jump
+findMove(Board, easy-multiple, Xi, Yi, Moves, Index) :-
+    random(0, 2, Random),
+    Random > 0,
+    checkValidMoves(Board, [], Xi, Yi, Moves),
+    length(Moves, Length),
+    random(0, Length, Index).
+
+findMove(_, easy-multiple, _, _, [], 0).
 
 %Hard multiple jump - chooses best move from current initial position, which is the position from last move
 findMove(Board, hard-multiple, Xi, Yi, Moves, Index) :-
