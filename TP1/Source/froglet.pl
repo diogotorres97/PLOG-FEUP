@@ -290,7 +290,7 @@ validMovesRow(Board, Moves, Row, Column, NewMoves) :-
 	validMovesRow(Board, NewMoves1, NewRow, Column, NewMoves).
 
 checkValidMove(Board, Moves, Row, Column, DestRow, DestColumn, NewMoves) :-
-	checkIfOutsideBoard(DestRow, DestColumn), validMove(DestRow, DestColumn, Row, Column, Board, Points),
+	checkIfOutsideBoard(DestRow, DestColumn), isJump(DestRow, DestColumn, Row, Column, Board, Points),
 	append([[Points, Row - Column, DestRow - DestColumn]], Moves, NewMoves).
 
 checkValidMove(_Board, Moves, _Row, _Column, _DestRow, _DestColumn, NewMoves) :-
@@ -321,7 +321,7 @@ move(Board, PlayerNumber, FinalBoard):-
         selectCell(Board, destination, DestRow, DestColumn), %Selects the coordinates of where to move previously chosen frog
 
         validMove(DestRow, DestColumn, Row, Column, Board, _),
-	moveFrog(Row, Column, DestRow, DestColumn, Board, NewBoard, PlayerNumber),
+	      moveFrog(Row, Column, DestRow, DestColumn, Board, NewBoard, PlayerNumber),
         doMultipleJump(NewBoard, DestRow, DestColumn, PlayerNumber, FinalBoard).
 
 %Handles multiple jump scenario for human player
@@ -396,25 +396,13 @@ verifySelection(_, destination) :- write('Not an empty cell! Choose another one.
 ***************************************************************************/
 
 %Verifies if the move is valid by checking if it's a jump over an adjacent frog to an empty space immediately after
-% validMove(DestRow, DestColumn, SrcRow, SrcCol, Board, Points) :-
-%
-%         ite(
-%               isJump(SrcRow, SrcCol, DestRow, DestColumn, Board, Points),
-%               ite(
-%                     validateMovement(SrcRow, SrcCol, DestRow, DestColumn),
-%                     true,
-%                     outputMessage('Not a valid jump! A frog has to jump over an adjacent frog.')
-%                  ),
-%               fail
-%            ).
-
-validMove(DestRow, DestColumn, SrcRow, SrcCol, Board, Points) :- !,
-	isJump(SrcRow, SrcCol, DestRow, DestColumn, Board, Points).
+validMove(DestRow, DestColumn, SrcRow, SrcCol, Board, Points) :-
+	isJump(DestRow, DestColumn, SrcRow, SrcCol, Board, Points),!.
 
 validMove(_, _, _, _, _, _) :- outputMessage('Not a valid jump! A frog has to jump over an adjacent frog.').
 
 %Checks if the respective movement is a jump over an adjacent frog to empty space.
-isJump(SrcRow, SrcCol, DestRow, DestCol, Board, Points) :-
+isJump(DestRow, DestCol, SrcRow, SrcCol, Board, Points) :-
 
         abs(SrcRow - DestRow, RowDiff),
         abs(SrcCol - DestCol, ColDiff),
@@ -438,14 +426,6 @@ isJump(SrcRow, SrcCol, DestRow, DestCol, Board, Points) :-
 delta(Y2, Y1, Y3) :- Y2-Y1>0, !, Y3=1.
 delta(Y2, Y1, Y3) :- Y2==Y1, !, Y3=0.
 delta(_,_,Y3) :- Y3 = -1.
-
-%Checks if move is only two squares horizontally or vertically
-% validateMovement(OriginRow, OriginCol, DestRow, DestCol) :-
-% 	abs(OriginRow - DestRow, RowDiff),
-% 	abs(OriginCol - DestCol, ColDiff),
-% 	TotalDiff is RowDiff + ColDiff,
-% 	TotalDiff == 2,
-%         (RowDiff == 0 ; ColDiff == 0).
 
 %True if 0
 isEmpty(0).
