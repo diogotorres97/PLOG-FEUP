@@ -28,9 +28,9 @@
 playGame :-
         setupGame,
         setupGameMenu,
-%        generateBoard([], Board, 12),
-%        firstMoveMenu(Board, NewBoard),
-        ongoing(NewBoard),
+        generateBoard([], Board, 12),
+        firstMoveMenu(Board, NewBoard),
+%        ongoing(NewBoard),
         gameLoop(NewBoard),
         resetGame.
 
