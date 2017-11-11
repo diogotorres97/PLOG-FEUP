@@ -3,7 +3,7 @@
 ***************************************************************************/
 
 %Level 1 - cpu plays randomly from available moves, does not do multiple jumps
-cpuMove(Board, PlayerNumber, FinalBoard, easy) :- 
+cpuMove(Board, PlayerNumber, FinalBoard, easy) :-
     findMove(Board, easy, Moves, Index),
     cpuDoMove(Board, Moves, Index, PreviousX, PreviousY, PlayerNumber, NewBoard),
     doCPUMultipleJump(NewBoard, easy-multiple, PreviousX, PreviousY, PlayerNumber, FinalBoard).
@@ -21,7 +21,7 @@ cpuDoMove(Board, Moves, Index, Xf, Yf, PlayerNumber, FinalBoard) :-
 
     writeCPUMove(Xi, Yi, Xf, Yf),
 
-    moveFrog(Yi, Xi, Yf, Xf, Board, FinalBoard, PlayerNumber),
+    moveFrog(Xi, Yi, Xf, Yf, Board, FinalBoard, PlayerNumber),
     write('Press enter to continue'), nl,
     waitForKey, clearConsole.
 

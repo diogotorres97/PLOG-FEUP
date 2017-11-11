@@ -28,9 +28,9 @@
 playGame :-
         setupGame,
         setupGameMenu,
-        generateBoard([], Board, 12),
-        firstMoveMenu(Board, NewBoard),
-%        ongoing(NewBoard),
+%        generateBoard([], Board, 12),
+%        firstMoveMenu(Board, NewBoard),
+        ongoing(NewBoard),
         gameLoop(NewBoard),
         resetGame.
 
@@ -87,10 +87,10 @@ gameLoop(Board) :-
 
 %Ask for user / cpu move and toggle player
 movement(Board, PlayerNumber, NewBoard) :-
-        
+
         getCurrentPlayerType(PlayerNumber, Type),
         doMove(Board, PlayerNumber, NewBoard, Type),
-        
+
         togglePlayer(PlayerNumber, NewPlayerNumber),
         retract(currentPlayer(PlayerNumber)),
         assert(currentPlayer(NewPlayerNumber)).
@@ -123,7 +123,7 @@ writeScore :-
 
 %Write current player number and type, does not print new line
 writePlayer(PlayerNumber) :-
-        
+
         write('Current player: '), write(PlayerNumber), write(' '),
         getCurrentPlayerType(PlayerNumber, Type),
         getCPUDifficulty(PlayerNumber, Diff),
@@ -145,24 +145,24 @@ endGame(Board) :-
 
 %Ask user for game type by querying about the player types and difficulties if CPU
 setupGameMenu :-
-        
+
         askPlayerType(1),
         askPlayerType(2),
         player1Type(Type1),
         player2Type(Type2),
-        
+
         askCPUDiff(1, Type1),
         askCPUDiff(2, Type2).
 
 %Queries user for player types, repeats until valid input
 askPlayerType(PlayerNumber) :-
-        
+
         repeat,
-        
+
         write('Choose player type for player '), write(PlayerNumber), nl,
         write('1 - Human'), nl,
         write('2 - Robot'), nl,
-        
+
         read_line(Input),
         verifyMenuInput(Input),
         storePlayerType(PlayerNumber, Input).
@@ -181,11 +181,11 @@ askCPUDiff(PlayerNumber, human) :- storeCPUDiff(PlayerNumber, "1").
 %askCPUDiff(PlayerNumber, PlayerType)
 askCPUDiff(PlayerNumber, cpu) :-
         repeat,
-        
+
         write('Choose difficulty for CPU '), write(PlayerNumber), nl,
         write('1 - easy'), nl,
         write('2 - hard'), nl,
-        
+
         read_line(Input),
         verifyMenuInput(Input),
         storeCPUDiff(PlayerNumber, Input).
@@ -309,19 +309,19 @@ checkValidMoves(Board, Moves, Row, Column, FinalMoves) :-
 
 %Asks user to select a green frog to remove from board for starting the game
 firstMove(Board, FinalBoard) :-
-        
+
          selectCell(Board, first, Row, Column),
          replace(Board, Row, Column, 0, FinalBoard).
 
 %Predicate that is responsible for the player movement
 move(Board, PlayerNumber, FinalBoard):-
-        
+
         repeat,
         selectCell(Board, source, Row, Column), %Selects the frog to move and checks if it's possible to move it
         selectCell(Board, destination, DestRow, DestColumn), %Selects the coordinates of where to move previously chosen frog
 
         validMove(DestRow, DestColumn, Row, Column, Board, _),
-	moveFrog(Column, Row, DestColumn, DestRow, Board, NewBoard, PlayerNumber),
+	moveFrog(Row, Column, DestRow, DestColumn, Board, NewBoard, PlayerNumber),
         doMultipleJump(NewBoard, DestRow, DestColumn, PlayerNumber, FinalBoard).
 
 %Handles multiple jump scenario for human player
@@ -334,26 +334,26 @@ doMultipleJump(Board, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
         repeat,
         selectCell(Board, destination, DestRow, DestColumn),
         validMove(DestRow, DestColumn, InitRow, InitColumn, Board, _),
-        moveFrog(InitColumn, InitRow, DestColumn, DestRow, Board, NewBoard, PlayerNumber),
+        moveFrog(InitRow, InitColumn,DestRow, DestColumn, Board, NewBoard, PlayerNumber),
         doMultipleJump(NewBoard, DestRow, DestColumn, PlayerNumber, FinalBoard).
-        
+
 doMultipleJump(Board, _, _, _, FinalBoard) :- FinalBoard = Board.
-        
+
 %Queries if user wants to jump again, repeats until valid input
 askMultipleJump :-
         repeat,
-        
+
         write('Multiple jump possible, do jump?'), nl,
         write('1 - yes'), nl,
         write('2 - no'), nl,
-        
+
         read_line(Input), !,
         Input == "1".
 
 
 %Queries user for coordinates of the move, changes according to type which can be source or destination
 selectCell(Board, Type, Row, Column) :-
-        
+
         repeat,
         printSelection(Board, Type),
         getCoords(Row, Column),
@@ -365,7 +365,7 @@ printSelection(Board, source) :-
         validMoves(Board, [], NewMoves),
         getMatrixColumn(NewMoves, 1, ColumnList),
         printListAsCoords(ColumnList), nl.
-        
+
 printSelection(_, destination) :- nl, write('Jump to where?'), nl.
 printSelection(_, first) :- nl, write('Select a green frog to remove.'), nl.
 
@@ -374,7 +374,7 @@ printSelection(_, first) :- nl, write('Select a green frog to remove.'), nl.
 %If destination checks for empty cell
 %If first checks for a green frog
 validateSelection(Board, Type, Row, Column) :-
-        
+
         checkIfOutsideBoard(Row, Column),
         getBoardElement(Board, Row, Column, Cell), !,
         verifySelection(Cell, Type). %Verifies selection stored in Cell
@@ -396,24 +396,30 @@ verifySelection(_, destination) :- write('Not an empty cell! Choose another one.
 ***************************************************************************/
 
 %Verifies if the move is valid by checking if it's a jump over an adjacent frog to an empty space immediately after
-validMove(DestRow, DestColumn, SrcRow, SrcCol, Board, Points) :-
+% validMove(DestRow, DestColumn, SrcRow, SrcCol, Board, Points) :-
+%
+%         ite(
+%               isJump(SrcRow, SrcCol, DestRow, DestColumn, Board, Points),
+%               ite(
+%                     validateMovement(SrcRow, SrcCol, DestRow, DestColumn),
+%                     true,
+%                     outputMessage('Not a valid jump! A frog has to jump over an adjacent frog.')
+%                  ),
+%               fail
+%            ).
 
-        ite(
-              isJump(SrcRow, SrcCol, DestRow, DestColumn, Board, Points),
-              ite(
-                    validateMovement(SrcRow, SrcCol, DestRow, DestColumn),
-                    true,
-                    outputMessage('Not a valid jump! A frog has to jump over an adjacent frog.')
-                 ),
-              fail
-           ).
+validMove(DestRow, DestColumn, SrcRow, SrcCol, Board, Points) :- !,
+	isJump(SrcRow, SrcCol, DestRow, DestColumn, Board, Points).
+
+validMove(_, _, _, _, _, _) :- outputMessage('Not a valid jump! A frog has to jump over an adjacent frog.').
 
 %Checks if the respective movement is a jump over an adjacent frog to empty space.
 isJump(SrcRow, SrcCol, DestRow, DestCol, Board, Points) :-
-        
+
         abs(SrcRow - DestRow, RowDiff),
         abs(SrcCol - DestCol, ColDiff),
         xor(RowDiff == 2, ColDiff == 2),
+          %xor(RowDiff == 0, ColDiff == 0), Not sure if this condition is needed
         TotalDiff is RowDiff + ColDiff,
         TotalDiff == 2,
         getBoardElement(Board, SrcRow, SrcCol, Cell), !,
@@ -434,12 +440,12 @@ delta(Y2, Y1, Y3) :- Y2==Y1, !, Y3=0.
 delta(_,_,Y3) :- Y3 = -1.
 
 %Checks if move is only two squares horizontally or vertically
-validateMovement(OriginRow, OriginCol, DestRow, DestCol) :-
-	abs(OriginRow - DestRow, RowDiff),
-	abs(OriginCol - DestCol, ColDiff),
-	TotalDiff is RowDiff + ColDiff,
-	TotalDiff == 2,
-        (RowDiff == 0 ; ColDiff == 0).
+% validateMovement(OriginRow, OriginCol, DestRow, DestCol) :-
+% 	abs(OriginRow - DestRow, RowDiff),
+% 	abs(OriginCol - DestCol, ColDiff),
+% 	TotalDiff is RowDiff + ColDiff,
+% 	TotalDiff == 2,
+%         (RowDiff == 0 ; ColDiff == 0).
 
 %True if 0
 isEmpty(0).
@@ -449,8 +455,8 @@ isEmpty(0).
 ***************************************************************************/
 
 %Receives destination and source coordinates and updates frog coordinates on board
-moveFrog(FromCol, FromRow, ToCol, ToRow, Board, NewBoard, PlayerNumber) :-
-        
+moveFrog(FromRow, FromCol, ToRow, ToCol, Board, NewBoard, PlayerNumber) :-
+
         getBoardElement(Board, FromRow, FromCol, Frog), %Save which Frog will move
         replace(Board, FromRow, FromCol, 0, InterBoard),
 
@@ -459,9 +465,9 @@ moveFrog(FromCol, FromRow, ToCol, ToRow, Board, NewBoard, PlayerNumber) :-
         delta(ToCol, FromCol, Y),
         IColumn is FromCol + Y,
         getBoardElement(Board, IRow, IColumn, Points), %Saves Points of move
-        
+
         updateScore(Points, PlayerNumber),
-        
+
         replace(InterBoard, IRow, IColumn, 0, InterBoard2),
         replace(InterBoard2, ToRow, ToCol, Frog, NewBoard).
 
