@@ -47,10 +47,41 @@ pickBestMove(Board, PlayerNumber, FinalBoard) :-
   write('CPU Moves from ['), write(RowI), write(', '), write(ColumnI), write('] '),
   write('to ['), write(RowF), write(', '), write(ColumnF), write(']'), nl,
 
-  moveFrog(Yi, Xi, Yf, Xf, Board, FinalBoard, PlayerNumber),
+  moveFrog(Yi, Xi, Yf, Xf, Board, NewBoard, PlayerNumber),
 
   write('Press enter to continue'), nl,
-  waitForKey, clearConsole.
+  waitForKey, clearConsole,
+  doCPUMultipleJump(NewBoard, Xf, Yf, PlayerNumber, FinalBoard). 
+
+%Handles multiple jump scenario for CPU player
+doCPUMultipleJump(Board, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
+        checkValidMoves(Board, [], InitRow, InitColumn, AvailMoves),
+        length(AvailMoves, NumMoves),
+        NumMoves > 0, !,
+        displayBoard(Board),
+        
+        write('CPU Multiple jump!'), nl,
+        
+        sort(AvailMoves, OrderedMoves),
+        Pos is NumMoves - 1,
+        
+        getBoardElement(OrderedMoves, Pos, 1, Xi - Yi), !,
+        getBoardElement(OrderedMoves, Pos, 2, Xf - Yf), !,
+        
+        RowI is Xi + 1, RowF is Xf + 1,
+        convertColumn(Yi, ColumnI), convertColumn(Yf, ColumnF),
+        
+        write('CPU Moves from ['), write(RowI), write(', '), write(ColumnI), write('] '),
+        write('to ['), write(RowF), write(', '), write(ColumnF), write(']'), nl,
+        
+        moveFrog(Yi, Xi, Yf, Xf, Board, NewBoard, PlayerNumber),
+        
+        write('Press enter to continue'), nl,
+        waitForKey, clearConsole,
+  
+        doCPUMultipleJump(NewBoard, Xf, Yf, PlayerNumber, FinalBoard).
+        
+doCPUMultipleJump(Board, _, _, _, FinalBoard) :- FinalBoard = Board.
 
 %CPU selects a random green frog to remove
 cpuFirstMove(Board, FinalBoard) :-
