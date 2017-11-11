@@ -91,8 +91,8 @@ printBoard([First|Tail], CurrLine) :-
 %Prints a list of lists representing a board, prints a header then the board
 displayBoard(Board) :-
         printHeader(12, 0), nl,
-        printColumnSeparatorLine(12, 0), nl,!,
-        printBoard(Board, 1).
+        printColumnSeparatorLine(12, 0), nl,
+        printBoard(Board, 1), !.
 
 %Checks if the coords are from outside the board's boundaries
 checkIfOutsideBoard(Row, Column) :-

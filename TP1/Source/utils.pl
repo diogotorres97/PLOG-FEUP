@@ -117,26 +117,35 @@ add_list([Head|Tail], Value, BuildList, FinalList) :-
         append(BuildList, [NewValue], NewBuildList),
         add_list(Tail, Value, NewBuildList, FinalList).
 
-%Receives Matrix and element position. Iterates through the lines until it finds the correct line and calls getRowElement
-getMatrixElement(_, Row, _, null) :-
+%Receives board and cell position. Iterates through the lines until it finds the correct line and calls getRowElement
+getBoardElement(_, Row, _, null) :-
         or(
         Row < 0,
         Row >= 12
         ).
 
-getMatrixElement(_, _, Column, null) :-
+getBoardElement(_, _, Column, null) :-
         or(
         Column < 0,
         Column >= 12
         ).
 
+getBoardElement([Line|_], 0, Column, Cell) :-
+        getRowElement(Line, Column, Cell).
+
+getBoardElement([_|RestOfBoard], Row, Column, Cell) :-
+        Row > 0,
+        NewRow is Row - 1,
+        getBoardElement(RestOfBoard, NewRow, Column, Cell).
+
+%Receives generic matrix and element position. Iterates through the lines until it finds the correct line and calls getRowElement
 getMatrixElement([Line|_], 0, Column, Cell) :-
         getRowElement(Line, Column, Cell).
 
-getMatrixElement([_|RestOfBoard], Row, Column, Cell) :-
+getMatrixElement([_|MatrixT], Row, Column, Cell) :-
         Row > 0,
         NewRow is Row - 1,
-        getMatrixElement(RestOfBoard, NewRow, Column, Cell).
+        getMatrixElement(MatrixT, NewRow, Column, Cell).
 
 %Finds the respective column and stores the cell.
 getRowElement([Cell|_], 0, Cell).

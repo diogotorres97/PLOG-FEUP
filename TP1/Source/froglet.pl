@@ -28,8 +28,9 @@
 playGame :-
         setupGame,
         setupGameMenu,
-        generateBoard([], Board, 12),
-        firstMoveMenu(Board, NewBoard),
+%        generateBoard([], Board, 12),
+%        firstMoveMenu(Board, NewBoard),
+        ongoing(NewBoard),
         gameLoop(NewBoard),
         resetGame.
 
@@ -313,14 +314,44 @@ firstMove(Board, FinalBoard) :-
          replace(Board, Row, Column, 0, FinalBoard).
 
 %Predicate that is responsible for the player movement
-move(Board, Player, FinalBoard):-
+move(Board, PlayerNumber, FinalBoard):-
         
         repeat,
         selectCell(Board, source, Row, Column), %Selects the frog to move and checks if it's possible to move it
         selectCell(Board, destination, DestRow, DestColumn), %Selects the coordinates of where to move previously chosen frog
 
         validMove(DestRow, DestColumn, Row, Column, Board, _),
-	moveFrog(Column, Row, DestColumn, DestRow, Board, FinalBoard, Player).
+	moveFrog(Column, Row, DestColumn, DestRow, Board, NewBoard, PlayerNumber),
+        doMultipleJump(NewBoard, DestRow, DestColumn, PlayerNumber, FinalBoard).
+
+%Handles multiple jump scenario for human player
+doMultipleJump(Board, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
+        checkValidMoves(Board, [], InitRow, InitColumn, AvailMoves),
+        length(AvailMoves, NumMoves),
+        NumMoves > 0, !,
+        displayBoard(Board),
+%        askMultipleJump(Choice),
+%        Choice == "1",
+        repeat,
+        selectCell(Board, destination, DestRow, DestColumn),
+        validMove(DestRow, DestColumn, InitRow, InitColumn, Board, _),
+        moveFrog(InitColumn, InitRow, DestColumn, DestRow, Board, NewBoard, PlayerNumber),
+        doMultipleJump(NewBoard, DestRow, DestColumn, PlayerNumber, FinalBoard).
+        
+doMultipleJump(Board, _, _, _, FinalBoard) :- FinalBoard = Board.
+        
+%Queries if user wants to jump again, repeats until valid input
+askMultipleJump(Choice) :-
+        repeat,
+        
+        write('Multiple jump possible, do jump?'), nl,
+        write('1 - yes'), nl,
+        write('2 - no'), nl,
+        
+        read_line(Input),
+        verifyMenuInput(Input),
+        Choice = Input, !.
+
 
 %Queries user for coordinates of the move, changes according to type which can be source or destination
 selectCell(Board, Type, Row, Column) :-
@@ -347,7 +378,7 @@ printSelection(_, first) :- nl, write('Select a green frog to remove.'), nl.
 validateSelection(Board, Type, Row, Column) :-
         
         checkIfOutsideBoard(Row, Column),
-        getMatrixElement(Board, Row, Column, Cell), !,
+        getBoardElement(Board, Row, Column, Cell), !,
         verifySelection(Cell, Type). %Verifies selection stored in Cell
 
 %Verifies cell selection, prints error message when chosen cell isn't a green frog
@@ -387,17 +418,17 @@ isJump(SrcRow, SrcCol, DestRow, DestCol, Board, Points) :-
         xor(RowDiff == 2, ColDiff == 2),
         TotalDiff is RowDiff + ColDiff,
         TotalDiff == 2,
-        getMatrixElement(Board, SrcRow, SrcCol, Cell), !,
+        getBoardElement(Board, SrcRow, SrcCol, Cell), !,
         not(isEmpty(Cell)),
 
         delta(DestRow, SrcRow, X),
         IRow is SrcRow + X,
         delta(DestCol, SrcCol, Y),
         IColumn is SrcCol + Y,
-        getMatrixElement(Board, IRow, IColumn, Points), !,
+        getBoardElement(Board, IRow, IColumn, Points), !,
         not(isEmpty(Points)),
 
-        getMatrixElement(Board, DestRow, DestCol, CellF), !,
+        getBoardElement(Board, DestRow, DestCol, CellF), !,
         isEmpty(CellF).
 
 delta(Y2, Y1, Y3) :- Y2-Y1>0, !, Y3=1.
@@ -422,14 +453,14 @@ isEmpty(0).
 %Receives destination and source coordinates and updates frog coordinates on board
 moveFrog(FromCol, FromRow, ToCol, ToRow, Board, NewBoard, PlayerNumber) :-
         
-        getMatrixElement(Board, FromRow, FromCol, Frog), %Save which Frog will move
+        getBoardElement(Board, FromRow, FromCol, Frog), %Save which Frog will move
         replace(Board, FromRow, FromCol, 0, InterBoard),
 
         delta(ToRow, FromRow, X),
         IRow is FromRow + X,
         delta(ToCol, FromCol, Y),
         IColumn is FromCol + Y,
-        getMatrixElement(Board, IRow, IColumn, Points), %Saves Points of move
+        getBoardElement(Board, IRow, IColumn, Points), %Saves Points of move
         
         updateScore(Points, PlayerNumber),
         

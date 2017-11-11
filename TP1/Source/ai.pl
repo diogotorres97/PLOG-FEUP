@@ -15,8 +15,8 @@ pickRandomMove(Board, PlayerNumber, FinalBoard) :-
   length(NewMoves, Length),
   random(0, Length, Value),
 
-  getMatrixElement(NewMoves, Value, 1, Xi - Yi), !,
-  getMatrixElement(NewMoves, Value, 2, Xf - Yf), !,
+  getBoardElement(NewMoves, Value, 1, Xi - Yi), !,
+  getBoardElement(NewMoves, Value, 2, Xf - Yf), !,
 
   RowI is Xi + 1, RowF is Xf + 1,
   convertColumn(Yi, ColumnI), convertColumn(Yf, ColumnF),
@@ -38,8 +38,8 @@ pickBestMove(Board, PlayerNumber, FinalBoard) :-
   sort(NewMoves, OrderedMoves),
   Pos is Length - 1,
 
-  getMatrixElement(OrderedMoves, Pos, 1, Xi - Yi), !,
-  getMatrixElement(OrderedMoves, Pos, 2, Xf - Yf), !,
+  getBoardElement(OrderedMoves, Pos, 1, Xi - Yi), !,
+  getBoardElement(OrderedMoves, Pos, 2, Xf - Yf), !,
 
   RowI is Xi + 1, RowF is Xf + 1,
   convertColumn(Yi, ColumnI), convertColumn(Yf, ColumnF),
@@ -58,7 +58,7 @@ cpuFirstMove(Board, FinalBoard) :-
   repeat,
   once(random(0, 12, Row)),
   once(random(0, 12, Column)),
-  once(getMatrixElement(Board, Row, Column, Cell)),
+  once(getBoardElement(Board, Row, Column, Cell)),
   Cell == 1,
   
   RowI is Row + 1,
