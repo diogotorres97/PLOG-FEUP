@@ -5,7 +5,7 @@ Game display
 	- board display before / after
 	- available initial positions if player
 	
-Multiple jump (Player / CPU)            - 50% (Player can't choose to not jump / AI doesn't jump yet)
+Multiple jump (Player / CPU)            - 75% (AI Lv.2 doesn't jump yet)
 Show last move (Player / CPU)           - 50% (CPU done ; Player left)
 Callout winner of the game              -  0%
 Testing

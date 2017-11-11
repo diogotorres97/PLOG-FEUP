@@ -328,10 +328,9 @@ move(Board, PlayerNumber, FinalBoard):-
 doMultipleJump(Board, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
         checkValidMoves(Board, [], InitRow, InitColumn, AvailMoves),
         length(AvailMoves, NumMoves),
-        NumMoves > 0, !,
+        NumMoves > 0,
         displayBoard(Board),
-%        askMultipleJump(Choice),
-%        Choice == "1",
+        askMultipleJump, !,
         repeat,
         selectCell(Board, destination, DestRow, DestColumn),
         validMove(DestRow, DestColumn, InitRow, InitColumn, Board, _),
@@ -341,16 +340,15 @@ doMultipleJump(Board, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
 doMultipleJump(Board, _, _, _, FinalBoard) :- FinalBoard = Board.
         
 %Queries if user wants to jump again, repeats until valid input
-askMultipleJump(Choice) :-
+askMultipleJump :-
         repeat,
         
         write('Multiple jump possible, do jump?'), nl,
         write('1 - yes'), nl,
         write('2 - no'), nl,
         
-        read_line(Input),
-        verifyMenuInput(Input),
-        Choice = Input, !.
+        read_line(Input), !,
+        Input == "1".
 
 
 %Queries user for coordinates of the move, changes according to type which can be source or destination
