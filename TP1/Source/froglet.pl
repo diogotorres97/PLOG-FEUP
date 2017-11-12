@@ -21,16 +21,16 @@
 :- dynamic blueCount/1.         %Blue frog count for board generation
 
 /**************************************************************************
-                     Main game predicates and menus
+                  Main game predicates and menus
 ***************************************************************************/
 
 %Game entry point
 playGame :-
         setupGame,
         setupGameMenu,
-%        generateBoard([], Board, 12),
-%        firstMoveMenu(Board, NewBoard),
-        ongoing(NewBoard),
+        generateBoard([], Board, 12),
+        firstMoveMenu(Board, NewBoard),
+        %ongoing(NewBoard),
         gameLoop(NewBoard),
         resetGame.
 
@@ -140,7 +140,7 @@ endGame(Board) :-
         validMoves(Board, [], NewMoves), !, length(NewMoves, 0).
 
 /**************************************************************************
-                              Setup menus
+                               Setup menus
 ***************************************************************************/
 
 %Ask user for game type by querying about the player types and difficulties if CPU
@@ -202,26 +202,26 @@ verifyMenuInput("1").
 verifyMenuInput("2").
 
 /**************************************************************************
-                        Board random generation
+                         Board random generation
 ***************************************************************************/
 
 %Generates a 12x12 board by calling the genLine predicate to get a full line and appends it to the intermediate board 12 times
 generateBoard(Board, FinalBoard, 0) :- FinalBoard = Board.
 
 generateBoard(Board, FinalBoard, Count) :-
-         genLine([], Line, 12),
-         append(Board, [Line], NewBoard),
-         NewCount is Count - 1,
-         generateBoard(NewBoard, FinalBoard, NewCount).
+        genLine([], Line, 12),
+        append(Board, [Line], NewBoard),
+        NewCount is Count - 1,
+        generateBoard(NewBoard, FinalBoard, NewCount).
 
 %Generates a line for the board with 12 frogs
 genLine(Board, OutBoard, 0) :- OutBoard = Board.
 
 genLine(Board, OutBoard, Count) :-
-         genRandFrog(Frog),
-         append(Board, [Frog], NewBoard),
-         NewCount is Count - 1,
-         genLine(NewBoard, OutBoard, NewCount).
+        genRandFrog(Frog),
+        append(Board, [Frog], NewBoard),
+        NewCount is Count - 1,
+        genLine(NewBoard, OutBoard, NewCount).
 
 %Picks a random frog and validates it by checking if it exceeds limit set by game rules
 genRandFrog(Frog) :-
@@ -304,14 +304,14 @@ checkValidMoves(Board, Moves, Row, Column, FinalMoves) :-
 	checkValidMove(Board, Moves3, Row, Column, Row, NewDown, FinalMoves).
 
 /**************************************************************************
-                      Player movement predicates
+                       Player movement predicates
 ***************************************************************************/
 
 %Asks user to select a green frog to remove from board for starting the game
 firstMove(Board, FinalBoard) :-
 
-         selectCell(Board, first, Row, Column),
-         replace(Board, Row, Column, 0, FinalBoard).
+        selectCell(Board, first, Row, Column),
+        replace(Board, Row, Column, 0, FinalBoard).
 
 %Predicate that is responsible for the player movement
 move(Board, PlayerNumber, FinalBoard):-
@@ -321,7 +321,7 @@ move(Board, PlayerNumber, FinalBoard):-
         selectCell(Board, destination, DestRow, DestColumn), %Selects the coordinates of where to move previously chosen frog
 
         validMove(DestRow, DestColumn, Row, Column, Board, _),
-	      moveFrog(Row, Column, DestRow, DestColumn, Board, NewBoard, PlayerNumber),
+	moveFrog(Row, Column, DestRow, DestColumn, Board, NewBoard, PlayerNumber),
         doMultipleJump(NewBoard, DestRow, DestColumn, PlayerNumber, FinalBoard).
 
 %Handles multiple jump scenario for human player
@@ -349,7 +349,6 @@ askMultipleJump :-
 
         read_line(Input), !,
         Input == "1".
-
 
 %Queries user for coordinates of the move, changes according to type which can be source or destination
 selectCell(Board, Type, Row, Column) :-
@@ -392,12 +391,12 @@ verifySelection(0, destination).
 verifySelection(_, destination) :- write('Not an empty cell! Choose another one.'), nl, fail.
 
 /**************************************************************************
-                      Overall movement validation
+                     Overall movement validation
 ***************************************************************************/
 
 %Verifies if the move is valid by checking if it's a jump over an adjacent frog to an empty space immediately after
 validMove(DestRow, DestColumn, SrcRow, SrcCol, Board, Points) :-
-	isJump(DestRow, DestColumn, SrcRow, SrcCol, Board, Points),!.
+	isJump(DestRow, DestColumn, SrcRow, SrcCol, Board, Points).
 
 validMove(_, _, _, _, _, _) :- outputMessage('Not a valid jump! A frog has to jump over an adjacent frog.').
 
@@ -407,7 +406,6 @@ isJump(DestRow, DestCol, SrcRow, SrcCol, Board, Points) :-
         abs(SrcRow - DestRow, RowDiff),
         abs(SrcCol - DestCol, ColDiff),
         xor(RowDiff == 2, ColDiff == 2),
-          %xor(RowDiff == 0, ColDiff == 0), Not sure if this condition is needed
         TotalDiff is RowDiff + ColDiff,
         TotalDiff == 2,
         getBoardElement(Board, SrcRow, SrcCol, Cell), !,
@@ -423,9 +421,9 @@ isJump(DestRow, DestCol, SrcRow, SrcCol, Board, Points) :-
         getBoardElement(Board, DestRow, DestCol, CellF), !,
         isEmpty(CellF).
 
-delta(Y2, Y1, Y3) :- Y2-Y1>0, !, Y3=1.
-delta(Y2, Y1, Y3) :- Y2==Y1, !, Y3=0.
-delta(_,_,Y3) :- Y3 = -1.
+delta(Y2, Y1, Y3) :- Y2 - Y1 > 0, !, Y3 = 1.
+delta(Y2, Y1, Y3) :- Y2 == Y1, !, Y3 = 0.
+delta(_, _, Y3) :- Y3 = -1.
 
 %True if 0
 isEmpty(0).
