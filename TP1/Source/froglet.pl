@@ -30,15 +30,12 @@ playGame :-
         setupGameMenu,
         generateBoard([], Board, 12),
         firstMoveMenu(Board, NewBoard),
-        %ongoing(NewBoard),
         gameLoop(NewBoard),
         resetGame.
 
 %First move of the game
 firstMoveMenu(Board, NewBoard) :-
-        displayBoard(Board),
-        doFirstMove(Board, NewBoard),
-        displayBoard(NewBoard).
+        doFirstMove(Board, NewBoard).
 
 %Execute first move of the game depending on player 1 type
 doFirstMove(Board, NewBoard) :-
@@ -49,6 +46,7 @@ doFirstMove(Board, human, NewBoard) :-
         firstMove(Board, NewBoard).
 
 doFirstMove(Board, cpu, NewBoard) :-
+        displayBoard(Board),
         cpuFirstMove(Board, NewBoard).
 
 %Setup game database
@@ -77,13 +75,10 @@ resetGame :-
 
 %Game loop
 gameLoop(Board) :-
-        displayBoard(Board),
+        clearConsole,
         currentPlayer(PlayerNumber),
-        writePlayer(PlayerNumber), nl,
-        writeScore, nl,
         movement(Board, PlayerNumber, NewBoard),
-        displayBoard(NewBoard),
-        ite(endGame(NewBoard), (writeScore, nl), gameLoop(NewBoard)).
+        ite(endGame(NewBoard), printGameOver(NewBoard), gameLoop(NewBoard)).
 
 %Ask for user / cpu move and toggle player
 movement(Board, PlayerNumber, NewBoard) :-
@@ -123,7 +118,6 @@ writeScore :-
 
 %Write current player number and type, does not print new line
 writePlayer(PlayerNumber) :-
-
         write('Current player: '), write(PlayerNumber), write(' '),
         getCurrentPlayerType(PlayerNumber, Type),
         getCPUDifficulty(PlayerNumber, Diff),
@@ -135,6 +129,19 @@ writePlayer(human, _) :-
 writePlayer(cpu, Diff) :-
         write('(CPU - '), write(Diff), write(')').
 
+%Prints final board and winner
+printGameOver(Board) :-
+        clearConsole,
+        displayBoard(Board),
+        writeScore, nl, nl,
+        player1Score(Score1),
+        player2Score(Score2),
+        Score1 > Score2, !,
+        write('Player 1 wins!'), nl.
+
+printGameOver(_) :-
+        write('Player 2 wins!'), nl.
+        
 %Checks if the game has ended
 endGame(Board) :-
         validMoves(Board, [], NewMoves), !, length(NewMoves, 0).
@@ -145,7 +152,6 @@ endGame(Board) :-
 
 %Ask user for game type by querying about the player types and difficulties if CPU
 setupGameMenu :-
-
         askPlayerType(1),
         askPlayerType(2),
         player1Type(Type1),
@@ -156,9 +162,9 @@ setupGameMenu :-
 
 %Queries user for player types, repeats until valid input
 askPlayerType(PlayerNumber) :-
-
         repeat,
-
+        clearConsole,
+        
         write('Choose player type for player '), write(PlayerNumber), nl,
         write('1 - Human'), nl,
         write('2 - Robot'), nl,
@@ -181,6 +187,7 @@ askCPUDiff(PlayerNumber, human) :- storeCPUDiff(PlayerNumber, "1").
 %askCPUDiff(PlayerNumber, PlayerType)
 askCPUDiff(PlayerNumber, cpu) :-
         repeat,
+        clearConsole,
 
         write('Choose difficulty for CPU '), write(PlayerNumber), nl,
         write('1 - easy'), nl,
@@ -310,15 +317,15 @@ checkValidMoves(Board, Moves, Row, Column, FinalMoves) :-
 %Asks user to select a green frog to remove from board for starting the game
 firstMove(Board, FinalBoard) :-
 
-        selectCell(Board, first, Row, Column),
+        selectCell(Board, first, 1, Row, Column),
         replace(Board, Row, Column, 0, FinalBoard).
 
 %Predicate that is responsible for the player movement
 move(Board, PlayerNumber, FinalBoard):-
 
         repeat,
-        selectCell(Board, source, Row, Column), %Selects the frog to move and checks if it's possible to move it
-        selectCell(Board, destination, DestRow, DestColumn), %Selects the coordinates of where to move previously chosen frog
+        selectCell(Board, source, PlayerNumber, Row, Column), %Selects the frog to move and checks if it's possible to move it
+        selectCell(Board, destination, PlayerNumber, DestRow, DestColumn), %Selects the coordinates of where to move previously chosen frog
 
         validMove(DestRow, DestColumn, Row, Column, Board, _),
 	moveFrog(Row, Column, DestRow, DestColumn, Board, NewBoard, PlayerNumber),
@@ -329,10 +336,10 @@ doMultipleJump(Board, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
         checkValidMoves(Board, [], InitRow, InitColumn, AvailMoves),
         length(AvailMoves, NumMoves),
         NumMoves > 0,
-        displayBoard(Board),
-        askMultipleJump, !,
+        askMultipleJump(Board, Input),
+        Input == "1", !,
         repeat,
-        selectCell(Board, destination, DestRow, DestColumn),
+        selectCell(Board, destination, PlayerNumber, DestRow, DestColumn),
         validMove(DestRow, DestColumn, InitRow, InitColumn, Board, _),
         moveFrog(InitRow, InitColumn,DestRow, DestColumn, Board, NewBoard, PlayerNumber),
         doMultipleJump(NewBoard, DestRow, DestColumn, PlayerNumber, FinalBoard).
@@ -340,33 +347,47 @@ doMultipleJump(Board, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
 doMultipleJump(Board, _, _, _, FinalBoard) :- FinalBoard = Board.
 
 %Queries if user wants to jump again, repeats until valid input
-askMultipleJump :-
+askMultipleJump(Board, Input) :-
         repeat,
-
+        clearConsole,
+        displayBoard(Board),
+        
         write('Multiple jump possible, do jump?'), nl,
         write('1 - yes'), nl,
         write('2 - no'), nl,
 
-        read_line(Input), !,
-        Input == "1".
+        read_line(Input),
+        (Input == "1" ; Input == "2"), !.
 
 %Queries user for coordinates of the move, changes according to type which can be source or destination
-selectCell(Board, Type, Row, Column) :-
+selectCell(Board, Type, PlayerNumber, Row, Column) :-
 
         repeat,
-        printSelection(Board, Type),
+        clearConsole,
+        printSelection(Board, PlayerNumber, Type),
         getCoords(Row, Column),
         validateSelection(Board, Type, Row, Column), !.
 
 %Prints info for the user according to type of selection
-printSelection(Board, source) :-
+printSelection(Board, PlayerNumber, source) :-
+        displayBoard(Board),
+        writePlayer(PlayerNumber), nl,
+        writeScore, nl, nl,
         nl, write('Select a frog to jump.'), nl,
+        write('Available initial positions:'), nl,
         validMoves(Board, [], NewMoves),
         getMatrixColumn(NewMoves, 1, ColumnList),
-        printListAsCoords(ColumnList), nl.
+        printListAsCoords(ColumnList), nl, nl, !.
 
-printSelection(_, destination) :- nl, write('Jump to where?'), nl.
-printSelection(_, first) :- nl, write('Select a green frog to remove.'), nl.
+printSelection(Board, PlayerNumber, destination) :-
+        displayBoard(Board),
+        writePlayer(PlayerNumber), nl,
+        writeScore, nl, nl,
+        nl, write('Jump to where?'), nl.
+
+printSelection(Board, _, first) :- 
+        displayBoard(Board),
+        nl, write('Select a green frog to remove.'), nl.
 
 %Validates player input according to type of move
 %If source checks for non empty cell
@@ -380,15 +401,15 @@ validateSelection(Board, Type, Row, Column) :-
 
 %Verifies cell selection, prints error message when chosen cell isn't a green frog
 verifySelection(1, first).
-verifySelection(_, first) :- write('Not a green frog! Choose another cell.'), nl, fail.
+verifySelection(_, first) :- outputMessage('Not a green frog! Choose another cell.').
 
 %Verifies cell selection, prints error message when chosen cell is empty
 verifySelection(X, source) :- X \== 0.
-verifySelection(_, source) :- write('Empty cell! Choose another one.'), nl, fail.
+verifySelection(_, source) :- outputMessage('Empty cell! Choose another one.').
 
 %Verifies cell selection, prints error message when chosen cell isn't empty
 verifySelection(0, destination).
-verifySelection(_, destination) :- write('Not an empty cell! Choose another one.'), nl, fail.
+verifySelection(_, destination) :- outputMessage('Not an empty cell! Choose another one.').
 
 /**************************************************************************
                      Overall movement validation

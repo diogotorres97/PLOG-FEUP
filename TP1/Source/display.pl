@@ -24,15 +24,24 @@ convertColumn(10, 'K').
 convertColumn(11, 'L').
 
 %Prints list of internal X-Y coordinates in user friendly way
-printListAsCoords([]).
 
-printListAsCoords([Head|Tail]) :-
+printListAsCoords(List) :-
+        printListAsCoords(List, 0).
+
+printListAsCoords([], _).
+
+printListAsCoords(List, 8) :- %Line break at X amount of coords printed
+        nl,
+        printListAsCoords(List, 0).
+
+printListAsCoords([Head|Tail], CurIndex) :-
         X-Y = Head,
         ActualX is X + 1,
         convertColumn(Y, ActualY),
         write('['), write(ActualX),
         write('-'), write(ActualY), write('] '),
-        printListAsCoords(Tail).
+        NewIndex is CurIndex + 1,
+        printListAsCoords(Tail, NewIndex).
 
 %Pads line with last hyfhen
 printSeparatingLine(Count, Count) :-

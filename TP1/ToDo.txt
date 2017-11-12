@@ -1,9 +1,0 @@
-Game display
-	- score
-	- current player
-	- last move (missing human player)
-	- board display before / after
-	- available initial positions if player (prettify this)
-	- game winner
-
-Testing

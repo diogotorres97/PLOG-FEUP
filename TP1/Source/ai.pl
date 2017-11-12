@@ -4,12 +4,18 @@
 
 %Level 1 - cpu plays randomly from available moves, does not do multiple jumps
 cpuMove(Board, PlayerNumber, FinalBoard, easy) :-
+    displayBoard(Board),
+    writePlayer(PlayerNumber), nl,
+    writeScore, nl, nl,
     findMove(Board, easy, Moves, Index),
     cpuDoMove(Board, Moves, Index, PreviousX, PreviousY, PlayerNumber, NewBoard),
     doCPUMultipleJump(NewBoard, easy-multiple, PreviousX, PreviousY, PlayerNumber, FinalBoard).
 
 %Level 2 - greedy approach, cpu plays the best move available but does not predict future board states, does multiple jumps
 cpuMove(Board, PlayerNumber, FinalBoard, hard) :-
+    displayBoard(Board),
+    writePlayer(PlayerNumber), nl,
+    writeScore, nl, nl,
     findMove(Board, hard, Moves, Index),
     cpuDoMove(Board, Moves, Index, PreviousX, PreviousY, PlayerNumber, NewBoard),
     doCPUMultipleJump(NewBoard, hard-multiple, PreviousX, PreviousY, PlayerNumber, FinalBoard).
@@ -30,11 +36,12 @@ doCPUMultipleJump(Board, Diff, InitRow, InitColumn, PlayerNumber, FinalBoard) :-
     checkValidMoves(Board, [], InitRow, InitColumn, AvailMoves),
     length(AvailMoves, NumMoves),
     NumMoves > 0,
-    displayBoard(Board),
-
+    
     findMove(Board, Diff, InitRow, InitColumn, Moves, Index),
     length(Moves, Length),
     Length > 0, !,
+    clearConsole,
+    displayBoard(Board),
     write('CPU Multiple jump!'), nl,
 
     cpuDoMove(Board, Moves, Index, PreviousX, PreviousY, PlayerNumber, NewBoard),
