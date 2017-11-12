@@ -27,10 +27,10 @@
 %Game entry point
 playGame :-
         setupGame,
-        setupGameMenu,
-        generateBoard([], Board, 12),
-        firstMoveMenu(Board, NewBoard),
-        %ongoing(NewBoard),
+%        setupGameMenu,
+%        generateBoard([], Board, 12),
+%        firstMoveMenu(Board, NewBoard),
+        predict(NewBoard),
         gameLoop(NewBoard),
         resetGame.
 
@@ -56,6 +56,12 @@ setupGame :-
         assert(currentPlayer(1)),
         assert(player1Score(0)),
         assert(player2Score(0)),
+        
+        assert(player1Type(cpu)), %TEST CODE
+        assert(player2Type(cpu)),
+        assert(cpu1Diff(harder)),
+        assert(cpu2Diff(harder)),
+        
         assert(greenCount(0)),
         assert(yellowCount(0)),
         assert(redCount(0)),
