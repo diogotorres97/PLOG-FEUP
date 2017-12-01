@@ -19,7 +19,6 @@ doppelBlock([CSum, RSum, Rows]) :-
         eachRowBlacken(Rows),
         transpose(Rows,Columns),
         eachRowBlacken(Columns),
-        %eachColumnBlacken(A,B,C,D,E,F),
 
         %third restrition
       eachRowSum2(RSum,A,B,C,D,E,F),
@@ -28,8 +27,8 @@ doppelBlock([CSum, RSum, Rows]) :-
       eachRowSum2(CSum,A1,A2,A3,A4,A5,A6),
       %eachRowSum(CSum,Columns),
 
-       maplist(labeling([]), Columns),
-       maplist(labeling([]), Rows),
+
+      maplist(labeling([]), Columns),
        write(A),nl, write(B), nl, write(C),nl, write(D),nl, write(E),nl,write(F).
        %maplist(write, Rows).
 
@@ -52,11 +51,6 @@ eachRowBlacken(Rows):-
 countEachRowBlacken(X):-
   count(0,X,#=,2).
 
-eachColumnBlacken([],[],[],[],[],[]).
-eachColumnBlacken([A|T1],[B|T2],[C|T3],[D|T4],[E|T5],[F|T6]) :-
-        eachColumnBlacken(T1, T2,T3,T4,T5,T6),
-        count(0,[A,B,C,D,E,F],#=,2).
-
 giveBlackenIndexes(L1, P1, P2):-
   element(P1, L1, 0),
   element(P2, L1, 0),
@@ -77,19 +71,13 @@ calcSum(Value, L1) :-
 
 eachRowSum2([S1,S2,S3,S4,S5,S6],A,B,C,D,E,F):-
   calcSum(S1,A),  calcSum(S2,B),
-  calcSum(S3,C),   calcSum(S4,D).
+  calcSum(S3,C), calcSum(S4,D).
 %  calcSum(S5,E),   calcSum(S6,F).
 
 eachRowSum([],[]).
 eachRowSum([S1|ST],[R1|SR]):-
   eachRowSum(ST,SR),
   calcSum(S1,R1).
-
-
-eachColSum([],[],[],[],[],[],[]).
-eachColSum([H|T], [A|T1],[B|T2],[C|T3],[D|T4],[E|T5],[F|T6]) :-
-        calcSum(H,[A,B,C,D,E,F]),
-        eachColSum(T,T1,T2,T3,T4,T5,T6).
 
 test_board([
   [4, 8, 4, 5, 6, 5], % Column Sum
