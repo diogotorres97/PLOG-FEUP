@@ -6,8 +6,8 @@
 :- use_module(library(clpfd)).
 
 doppelBlock([CSum, RSum, Rows]) :-
-        length(Rows, 6), maplist(same_length(Rows), Rows),
-        Rows = [A,B,C,D,E,F],
+        length(Rows, 6), maplist(same_length(Rows), Rows), % Create a bidimensional matrix 6x6
+        Rows = [A,B,C,D,E,F], %Each row of Matrix
 
         defineDomain(A,B,C,D,E,F), %usar maplist
 
@@ -22,30 +22,29 @@ doppelBlock([CSum, RSum, Rows]) :-
         eachRowSum(RSum,A,B,C,D,E,F),
         eachColSum(CSum,A,B,C,D,E,F),
 
-        labeling([],Rows), write(Rows).
+         maplist(labeling([]), Rows), maplist(writeln, Rows).
 
 defineDomain(A,B,C,D,E,F) :-
-        domain(A,0,5), domain(B,0,5),
-        domain(C,0,5), domain(D,0,5),
-        domain(E,0,5), domain(F,0,5).
+        domain(A,0,4), domain(B,0,4),
+        domain(C,0,4), domain(D,0,4),
+        domain(E,0,4), domain(F,0,4).
 
 defineCardinality(A,B,C,D,E,F) :-
-        global_cardinality(A,[0-2,1-1,2-1,3-1,4-1,5-1]),
-        global_cardinality(B,[0-2,1-1,2-1,3-1,4-1,5-1]),
-        global_cardinality(C,[0-2,1-1,2-1,3-1,4-1,5-1]),
-        global_cardinality(D,[0-2,1-1,2-1,3-1,4-1,5-1]),
-        global_cardinality(E,[0-2,1-1,2-1,3-1,4-1,5-1]),
-        global_cardinality(F,[0-2,1-1,2-1,3-1,4-1,5-1]).
-
+        global_cardinality(A,[0-2,1-1,2-1,3-1,4-1]),
+        global_cardinality(B,[0-2,1-1,2-1,3-1,4-1]),
+        global_cardinality(C,[0-2,1-1,2-1,3-1,4-1]),
+        global_cardinality(D,[0-2,1-1,2-1,3-1,4-1]),
+        global_cardinality(E,[0-2,1-1,2-1,3-1,4-1]),
+        global_cardinality(F,[0-2,1-1,2-1,3-1,4-1]).
 
 eachRowBlacken(A,B,C,D,E,F):-
-  exactly(0,A,2),  exactly(0,B,2),
-  exactly(0,C,2), exactly(0,D,2),
-  exactly(0,E,2),   exactly(0,F,2).
+  count(0,A,#=,2), count(0,B,#=,2),
+  count(0,C,#=,2), count(0,D,#=,2),
+  count(0,E,#=,2), count(0,F,#=,2).
 
 eachColumnBlacken([],[],[],[],[],[]).
 eachColumnBlacken([A|T1],[B|T2],[C|T3],[D|T4],[E|T5],[F|T6]) :-
-        exactly(0,[A,B,C,D,E,F],2),
+        count(0,[A,B,C,D,E,F],#=,2),
         eachColumnBlacken(T1, T2,T3,T4,T5,T6).
 
 giveBlackenIndexes(L1, P1, P2):-
@@ -74,7 +73,7 @@ eachRowSum([S1,S2,S3,S4,S5,S6],A,B,C,D,E,F):-
 eachColSum([],[],[],[],[],[],[]).
 eachColSum([H|T], [A|T1],[B|T2],[C|T3],[D|T4],[E|T5],[F|T6]) :-
         calcSum(H,[A,B,C,D,E,F]),
-        eachColumnBlacken(T,T1,T2,T3,T4,T5,T6).
+        eachColSum(T,T1,T2,T3,T4,T5,T6).
 
 test_board([
   [4, 8, 4, 5, 6, 5], % Column Sum
