@@ -4,43 +4,44 @@
 % :- include('display.pl').   %Boards used for testing
 
 :- use_module(library(clpfd)).
+:- use_module(library(lists)).
 
 doppelBlock([CSum, RSum, Rows]) :-
         length(Rows, 6), maplist(same_length(Rows), Rows), % Create a bidimensional matrix 6x6
         Rows = [A,B,C,D,E,F], %Each row of Matrix
 
-        defineDomain(A,B,C,D,E,F), %usar maplist
+        defineDomain(Rows),
 
         %first restrition
-        defineCardinality(A,B,C,D,E,F), %usar maplist
+        defineCardinality(Rows),
 
         %second restrition
-        eachRowBlacken(A,B,C,D,E,F),
-        eachColumnBlacken(A,B,C,D,E,F),
+        eachRowBlacken(Rows),
+      %  eachColumnBlacken(A,B,C,D,E,F),
 
         %third restrition
         eachRowSum(RSum,A,B,C,D,E,F),
-        eachColSum(CSum,A,B,C,D,E,F),
+      %  eachColSum(CSum,A,B,C,D,E,F),
 
-         maplist(labeling([]), Rows), maplist(writeln, Rows).
 
-defineDomain(A,B,C,D,E,F) :-
-        domain(A,0,4), domain(B,0,4),
-        domain(C,0,4), domain(D,0,4),
-        domain(E,0,4), domain(F,0,4).
+       maplist(labeling([]), Rows), maplist(write, Rows).
 
-defineCardinality(A,B,C,D,E,F) :-
-        global_cardinality(A,[0-2,1-1,2-1,3-1,4-1]),
-        global_cardinality(B,[0-2,1-1,2-1,3-1,4-1]),
-        global_cardinality(C,[0-2,1-1,2-1,3-1,4-1]),
-        global_cardinality(D,[0-2,1-1,2-1,3-1,4-1]),
-        global_cardinality(E,[0-2,1-1,2-1,3-1,4-1]),
-        global_cardinality(F,[0-2,1-1,2-1,3-1,4-1]).
+defineDomain(Rows):-
+        maplist(define_domain, Rows).
 
-eachRowBlacken(A,B,C,D,E,F):-
-  count(0,A,#=,2), count(0,B,#=,2),
-  count(0,C,#=,2), count(0,D,#=,2),
-  count(0,E,#=,2), count(0,F,#=,2).
+define_domain(X):- domain(X, 0, 4).
+
+defineCardinality(Rows) :-
+        maplist(define_Cardinality, Rows).
+
+define_Cardinality(X) :-
+  global_cardinality(X,[0-2,1-1,2-1,3-1,4-1]).
+
+eachRowBlacken(Rows):-
+  maplist(countEachRowBlacken, Rows).
+
+countEachRowBlacken(X):-
+  count(0,X,#=,2).
 
 eachColumnBlacken([],[],[],[],[],[]).
 eachColumnBlacken([A|T1],[B|T2],[C|T3],[D|T4],[E|T5],[F|T6]) :-
@@ -66,9 +67,9 @@ calcSum(Value, L1) :-
   Value #= Result.
 
 eachRowSum([S1,S2,S3,S4,S5,S6],A,B,C,D,E,F):-
-  calcSum(S1,A),   calcSum(S2,B),
-  calcSum(S3,C),   calcSum(S4,D),
-  calcSum(S5,E),   calcSum(S6,F).
+  calcSum(S1,A),  calcSum(S2,B),
+  calcSum(S3,C),   calcSum(S4,D).
+  %calcSum(S5,E),   calcSum(S6,F).
 
 eachColSum([],[],[],[],[],[],[]).
 eachColSum([H|T], [A|T1],[B|T2],[C|T3],[D|T4],[E|T5],[F|T6]) :-
