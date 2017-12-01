@@ -17,14 +17,16 @@ doppelBlock([CSum, RSum, Rows]) :-
 
         %second restrition
         eachRowBlacken(Rows),
-      %  eachColumnBlacken(A,B,C,D,E,F),
+        eachColumnBlacken(A,B,C,D,E,F),
 
         %third restrition
-        eachRowSum(RSum,A,B,C,D,E,F),
+        eachRowSum2(RSum,A,B,C,D,E,F),
+        %eachRowSum(Rsum,Rows),
       %  eachColSum(CSum,A,B,C,D,E,F),
 
-
-       maplist(labeling([]), Rows), maplist(write, Rows).
+       maplist(labeling([]), Rows),
+       write(A),nl, write(B), nl, write(C),nl, write(D),nl, write(E),nl,write(F).
+       %maplist(write, Rows).
 
 defineDomain(Rows):-
         maplist(define_domain, Rows).
@@ -32,7 +34,9 @@ defineDomain(Rows):-
 define_domain(X):- domain(X, 0, 4).
 
 defineCardinality(Rows) :-
-        maplist(define_Cardinality, Rows).
+        maplist(define_Cardinality, Rows),
+        transpose(Rows, Columns),
+        maplist(define_Cardinality, Columns).
 
 define_Cardinality(X) :-
   global_cardinality(X,[0-2,1-1,2-1,3-1,4-1]).
@@ -45,8 +49,8 @@ countEachRowBlacken(X):-
 
 eachColumnBlacken([],[],[],[],[],[]).
 eachColumnBlacken([A|T1],[B|T2],[C|T3],[D|T4],[E|T5],[F|T6]) :-
-        count(0,[A,B,C,D,E,F],#=,2),
-        eachColumnBlacken(T1, T2,T3,T4,T5,T6).
+        eachColumnBlacken(T1, T2,T3,T4,T5,T6),
+        count(0,[A,B,C,D,E,F],#=,2).
 
 giveBlackenIndexes(L1, P1, P2):-
   element(P1, L1, 0),
@@ -66,10 +70,15 @@ calcSum(Value, L1) :-
   sumBetweenIndexes(L1, P1, P2,0 , Result),
   Value #= Result.
 
-eachRowSum([S1,S2,S3,S4,S5,S6],A,B,C,D,E,F):-
+eachRowSum2([S1,S2,S3,S4,S5,S6],A,B,C,D,E,F):-
   calcSum(S1,A),  calcSum(S2,B),
   calcSum(S3,C),   calcSum(S4,D).
   %calcSum(S5,E),   calcSum(S6,F).
+
+eachRowSum([],[]).
+eachRowSum([S1|ST],[R1|SR]):-
+  eachRowSum(ST,SR),
+  calcSum(S1,R1).
 
 eachColSum([],[],[],[],[],[],[]).
 eachColSum([H|T], [A|T1],[B|T2],[C|T3],[D|T4],[E|T5],[F|T6]) :-
