@@ -7,7 +7,7 @@
 :- use_module(library(lists)).
 
 doppelBlock([CSum, RSum, Rows]) :-
-        reset_timer,
+
         length(CSum, N),
         getInitialBoard(N, Rows),
 
@@ -18,18 +18,19 @@ doppelBlock([CSum, RSum, Rows]) :-
 
         %second restrition
         eachRowBlacken(Rows),
-        transpose(Rows,Columns),
+        transpose(Rows, Columns),
         eachRowBlacken(Columns),
 
         %third restrition
-      Rows = [A,B,C,D,E,F], %Each row of Matrix
-      eachRowSum3(RSum,[A,B,C,D,E,F]),
-      Columns = [A1,A2,A3,A4,A5,A6],
-      eachRowSum3(CSum,[A1,A2,A3,A4,A5,A6]),
+      eachRowSum(RSum, Rows),
+      eachRowSum(CSum, Columns),
 
-
+      reset_timer,
       maplist(labeling([]), Columns), print_time,
-       write(A),nl, write(B), nl, write(C),nl, write(D),nl, write(E),nl,write(F).
+      maplist(writeBoard, Columns).
+
+writeBoard(Line) :-
+  write(Line), nl.
 
 % Create a bidimensional matrix NxN
 getInitialBoard(N, Board):-
@@ -45,15 +46,14 @@ define_domain(MaxN,X):- domain(X, 0, MaxN).
 defineCardinality(N, Rows) :-
         createCardinality(N,1,[0-2], Lista),
         assert(cardinalityList(Lista)),
-        maplist(define_Cardinality(N), Rows),
+        maplist(define_Cardinality, Rows),
         transpose(Rows, Columns),
-        maplist(define_Cardinality(N), Columns).
+        maplist(define_Cardinality, Columns).
 
-define_Cardinality(N, X) :-
+define_Cardinality(X) :-
   cardinalityList(Lista),
   global_cardinality(X,Lista).
 
-%[0-2,1-1,2-1,3-1,4-1]
  createCardinality(Length,Counter, Lista,Lista):- Counter is Length - 1.
  createCardinality(Length,Counter,Temp, Lista) :-
    append([Counter-1], Temp, Temp2),
@@ -67,71 +67,25 @@ eachRowBlacken(Rows):-
 countEachRowBlacken(X):-
   count(0,X,#=,2).
 
-giveBlackenIndexes(L1, P1, P2):-
-  Black #= 0, P1#<P2,
-  element(P1, L1, Black),
-  element(P2, L1, Black).
-
-sumBetweenIndexes(_, P2, P2,Result, Result).
-sumBetweenIndexes(L1, P1, P2,Temp, Result):-
-  P1 #< P2,
-  element(P1, L1, Value),
-  Temp2 #= Temp + Value,
-  Idx #= P1 + 1,
-  sumBetweenIndexes(L1,Idx,P2,Temp2, Result).
-
-calcSum(Value, L1) :-
-  giveBlackenIndexes(L1, P1, P2),
-  sumBetweenIndexes(L1, P1, P2, 0, Result),
-  Value #= Result.
-
-eachRowSum([S1|ST],[R1|SR]):-
+eachRowSum([S1|ST], [R1|SR]):-
   length(ST, N), N #>0,
-  eachRowSum(ST,SR),
-  calcSum(S1,R1).
+  eachRowSum(ST, SR),
+  sumInLine(R1, S1).
 
 eachRowSum(_,_).
 
-%% Code for in test phase!!!
+getArc(0,Temp,Temp,_).
 
-createCoeffs(Length,Length,_,_,Output, Output).
-createCoeffs(Counter, Length ,Idx1, Idx2, Temp, Output) :-
-  (Counter #> Idx1 #/\ Counter #< Idx2) #<=> Var,
-  Temp2 #= Counter + 1 #/\
-  createCoeffs(Temp2, Length, Idx1, Idx2, [Var|Temp], Output).
-
-calcSum3(Value, L1) :-
-  %giveBlackenIndexes(L1, P1, P2),
-  sumBetweenIndexes2(L1,Value).
-
-
-sumBetweenIndexes2(L1, P1, P2,Value) :-
-  length(L1, N1), write(N1),nl, write(P1), nl,  write(P2),nl,
-  createCoeffs(0, N1 ,P1, P2, [], TempList),
-  write('puta'),
-  reverse(TempList, Output),
-  write('cenas'),nl, write(Output), nl, write(L1),
-  scalar_product(Output,L1,#= ,X), write(X).
-
-eachRowSum3([S1,S2,S3,S4,S5,S6],[A,B,C,D,E,F]):-
-  calcSum3(S1,A),  calcSum3(S2,B),
-  calcSum3(S3,C), calcSum3(S4,D),
-  calcSum3(S5,E),   calcSum3(S6,F).
-
-%createCoeffs([2,3,4,5,6,1,2,3,4],0,3,5,[],L).
-
-getArc(0,Temp,List,_):-
-  append(Temp, [arc(q0,0,q1),arc(q1,0,q2)],List).
 getArc(N,Temp, List, Counter) :-
   N > 0,
   append(Temp, [arc(q0,N,q0), arc(q1,N,q1,[Counter+N]), arc(q2,N,q2)], NewList),
   NewN is N-1,
   getArc(NewN, NewList, List, Counter).
 
-sumBetweenIndexes2(Line, Value):-
+sumInLine(Line, Value):-
   length(Line,N), NewN #= N-2,
-  getArc(NewN, [], List, Counter),
-  automaton(Line, _, Line,[source(q0),sink(q2)],List, [Counter],[0],[Value]).
+  getArc(NewN, [arc(q0,0,q1), arc(q1,0,q2)], List, Counter),
+  automaton(Line, _, Line, [source(q0), sink(q2)], List, [Counter], [0], [Value]).
 
 test_board([
   [4, 8, 4, 5, 6, 5], % Column Sum
