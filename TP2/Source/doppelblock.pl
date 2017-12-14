@@ -23,9 +23,9 @@ doppelBlock([CSum, RSum, Rows]) :-
 
         %third restrition
       Rows = [A,B,C,D,E,F], %Each row of Matrix
-      eachRowSum(RSum,[A,B,C,D,E,F]),
+      eachRowSum3(RSum,[A,B,C,D,E,F]),
       Columns = [A1,A2,A3,A4,A5,A6],
-      eachRowSum(CSum,[A1,A2,A3,A4]),
+      eachRowSum3(CSum,[A1,A2,A3,A4,A5,A6]),
 
 
       maplist(labeling([]), Columns), print_time,
@@ -101,8 +101,9 @@ createCoeffs(Counter, Length ,Idx1, Idx2, Temp, Output) :-
   createCoeffs(Temp2, Length, Idx1, Idx2, [Var|Temp], Output).
 
 calcSum3(Value, L1) :-
-  giveBlackenIndexes(L1, P1, P2),
-  sumBetweenIndexes2(L1, P1, P2,Value).
+  %giveBlackenIndexes(L1, P1, P2),
+  sumBetweenIndexes2(L1,Value).
+
 
 sumBetweenIndexes2(L1, P1, P2,Value) :-
   length(L1, N1), write(N1),nl, write(P1), nl,  write(P2),nl,
@@ -112,24 +113,25 @@ sumBetweenIndexes2(L1, P1, P2,Value) :-
   write('cenas'),nl, write(Output), nl, write(L1),
   scalar_product(Output,L1,#= ,X), write(X).
 
-eachRowSum3([S1,S2,S3,S4,S5,S6],A,B,C,D,E,F):-
-  calcSum3(S1,A).%  calcSum3(S2,B),
-%  calcSum3(S3,C), calcSum3(S4,D).
-%  calcSum(S5,E),   calcSum(S6,F).
+eachRowSum3([S1,S2,S3,S4,S5,S6],[A,B,C,D,E,F]):-
+  calcSum3(S1,A),  calcSum3(S2,B),
+  calcSum3(S3,C), calcSum3(S4,D),
+  calcSum3(S5,E),   calcSum3(S6,F).
 
 %createCoeffs([2,3,4,5,6,1,2,3,4],0,3,5,[],L).
 
-sumBetweenIndexes3([], _, _, _,Result, Result):- write('lel').
-sumBetweenIndexes3([H|T], Counter, P1, P2,Temp, Result):-
-  (write('entrei') #/\ Counter #> P1 #/\ write('lel') #/\
-   Counter #< P2 #/\
-    element(Counter, [H|T], Value) #/\
-    Temp2 #= Temp + Value #/\
-    Idx #= Counter + 1 #/\
-    sumBetweenIndexes3(T,Idx,P1,P2,Temp2, Result))
-  #\
-  (write('tou aqui') #/\ Idx #= Counter + 1 #/\
-  sumBetweenIndexes3(T,Idx,P1,P2,Temp, Result)).
+getArc(0,Temp,List,_):-
+  append(Temp, [arc(q0,0,q1),arc(q1,0,q2)],List).
+getArc(N,Temp, List, Counter) :-
+  N > 0,
+  append(Temp, [arc(q0,N,q0), arc(q1,N,q1,[Counter+N]), arc(q2,N,q2)], NewList),
+  NewN is N-1,
+  getArc(NewN, NewList, List, Counter).
+
+sumBetweenIndexes2(Line, Value):-
+  length(Line,N), NewN #= N-2,
+  getArc(NewN, [], List, Counter),
+  automaton(Line, _, Line,[source(q0),sink(q2)],List, [Counter],[0],[Value]).
 
 test_board([
   [4, 8, 4, 5, 6, 5], % Column Sum
