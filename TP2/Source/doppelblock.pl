@@ -22,11 +22,11 @@ doppelBlock([CSum, RSum, Rows]) :-
         eachRowBlacken(Columns),
 
         %third restrition
-      eachRowSum(RSum, Rows),
-      eachRowSum(CSum, Columns),
-
+	  maplist(sumInLine, Rows, RSum),
+	  maplist(sumInLine, Columns, CSum),
+	  
       reset_timer,
-      maplist(labeling([]), Columns), print_time,
+      maplist(labeling([bisect, down]), Columns), print_time,
       maplist(writeBoard, Columns).
 
 writeBoard(Line) :-
@@ -66,13 +66,6 @@ eachRowBlacken(Rows):-
 
 countEachRowBlacken(X):-
   count(0,X,#=,2).
-
-eachRowSum([S1|ST], [R1|SR]):-
-  length(ST, N), N #>0,
-  eachRowSum(ST, SR),
-  sumInLine(R1, S1).
-
-eachRowSum(_,_).
 
 getArc(0,Temp,Temp,_).
 
