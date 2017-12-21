@@ -28,17 +28,18 @@ solveDoppel([CSum, RSum, Rows]) :-
 
         defineDomain(N, Rows),
 
-        %first restrition TODO which is?
+        %first restrition - in  each  row  and  each  column restrict to 
+		%exactly  two cells blackened  and  each  number(between 1 and N-2)  appears  exactly  once
         defineCardinality(N, Rows),
 
-        %second restrition TODO which is?
+        %second restrition - exactly two cells are blackened
         restrictBlackCells(Rows),
         transpose(Rows, Columns),
         restrictBlackCells(Columns),
 
-        %third restrition TODO which is?
-	maplist(restrictSumInLine, Rows, RSum),
-	maplist(restrictSumInLine, Columns, CSum),
+        %third restrition - sum of the numbers between the two black cells in the row and column corresponds to a specific value
+		maplist(restrictSumInLine, Rows, RSum),
+		maplist(restrictSumInLine, Columns, CSum),
 
         resetTime, !,
         maplist(labeling([bisect, down]), Columns),
@@ -61,10 +62,11 @@ generateDoppel(Size, Doppel) :-
 
         defineDomain(Size, Rows),
 
-        %TODO same as solver
+        %first restrition - in each row and each column restrict to
+		%exactly two cells blackened and each number(between 1 and N-2) appears exactly once
         defineCardinality(Size, Rows),
 
-        %TODO same as solver
+        %exactly  two cells are blackened
         restrictBlackCells(Rows),
         transpose(Rows, Columns),
         restrictBlackCells(Columns),
@@ -127,14 +129,14 @@ getListBetweenBlackCells(_, _, ListBuild, ListBuild).
                               Restrictions
 ***************************************************************************/
 
-% TODO what do?
+% Define domain of each variable to values between 0 and N-2
 defineDomain(N, Rows):-
         MaxN #= N - 2,
         maplist(define_domain(MaxN), Rows).
 
 define_domain(MaxN,X):- domain(X, 0, MaxN).
 
-% TODO what do?
+% For each row and each column put exactly two cells black and each number between 1 and N-2 appears exactly once
 defineCardinality(N, Rows) :-
         createCardinality(N, 1, [0-2], List),
         assert(cardinalityList(List)),
@@ -146,7 +148,7 @@ define_Cardinality(X) :-
         cardinalityList(Lista),
         global_cardinality(X,Lista).
 
-% TODO what do?
+% Creates the Cardinality List in format [0-2,1-1,2-1,...,(N-2)-1]
 createCardinality(Length, Counter, List, List) :- Counter is Length - 1.
 
 createCardinality(Length, Counter, Temp, List) :-
@@ -155,23 +157,24 @@ createCardinality(Length, Counter, Temp, List) :-
         Tmp is Counter + 1,
         createCardinality(Length, Tmp, Temp2, List).
 
-% TODO what do?
+% For each row and each column put exactly two cells blackened
 restrictBlackCells(List) :-
         maplist(restrictBlackCellCount, List).
 
 restrictBlackCellCount(X) :-
         count(0, X, #=, 2).
 
-% TODO what do?
+% Finished building automaton
 sumArcs(0, Temp, Temp, _).
 
+% Automaton state transitions needed to count the value of sums between black cells
 sumArcs(N, Temp, List, Counter) :-
         N > 0,
         append(Temp, [arc(q0,N,q0), arc(q1, N, q1, [Counter + N]), arc(q2, N, q2)], NewList),
         NewN is N - 1,
         sumArcs(NewN, NewList, List, Counter).
 
-% TODO what do?
+% Restricts sum between black cells to a specific value
 restrictSumInLine(Line, Value):-
         length(Line,N), NewN #= N-2,
         sumArcs(NewN, [arc(q0,0,q1), arc(q1,0,q2)], List, Counter),
