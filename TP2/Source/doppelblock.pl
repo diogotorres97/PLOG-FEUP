@@ -1,4 +1,4 @@
-% :- include('board.pl'). %Boards used for testing
+:- include('board.pl'). %Boards used for testing
 
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
@@ -6,15 +6,12 @@
 
 :- dynamic cardinalityList/1.
 
-doppel(Size) :-
+doppelBlock(Size) :-
         
-        repeat,
-        once(generateBoard([], Board, Size)),
-        once(append(Board, [_A], FinalBoard)),
-        once(writeBoard(FinalBoard)),
-        once(doppelBlock(FinalBoard)).
+        generateDoppel(Size, Doppel),
+        solveDoppel(Doppel).
 
-doppelBlock([CSum, RSum, Rows]) :-
+solveDoppel([CSum, RSum, Rows]) :-
 
         retractall(cardinalityList(_)),
 
@@ -35,36 +32,100 @@ doppelBlock([CSum, RSum, Rows]) :-
 	maplist(sumInLine, Rows, RSum),
 	maplist(sumInLine, Columns, CSum),
 
-        reset_timer, !,
-        maplist(labeling([bisect, down]), Columns), print_time,
-        maplist(writeBoard, Columns).
+        reset_time, !,
+        maplist(labeling([bisect, down]), Columns),
+        get_time(Time),
+        
+        write('Puzzle solved:'), nl,
+        maplist(writeBoard, Columns), nl,
+        print_time(Time).
 
 writeBoard(Line) :-
         write(Line), nl.
 
 /**************************************************************************
-                         Board random generation
+                            Board generation
 ***************************************************************************/
 
-generateBoard(Board, FinalBoard, Count) :-
-        getBoardMaxSum(Count, Max),
-        genLine([], Line, Max, Count),
-        append(Board, [Line], NewBoard),
-        genLine([], Line2, Max, Count),
-        append(NewBoard, [Line2], FinalBoard).
-        %append(NewerBoard, [_], FinalBoard).
+generateDoppel(Size, Doppel) :-
 
-genLine(Board, OutBoard, _, 0) :- OutBoard = Board.
+        retractall(cardinalityList(_)),
 
-genLine(Board, OutBoard, Max, Count) :-
-        random(1, Max, Number),
-        append(Board, [Number], NewBoard),
-        NewCount is Count - 1,
-        genLine(NewBoard, OutBoard, Max, NewCount).
+        getInitialBoard(Size, Rows),
 
-getBoardMaxSum(Size, Max) :-
-        MaxNumber is Size - 2,
-        Max is MaxNumber * (MaxNumber + 1) // 2.
+        defineDomain(Size, Rows),
+
+        %first restrition
+        defineCardinality(Size, Rows),
+
+        %second restrition
+        eachRowBlacken(Rows),
+        transpose(Rows, Columns),
+        eachRowBlacken(Columns),
+
+        maplist(noConsecutiveBlackCells, Rows),
+        maplist(noConsecutiveBlackCells, Columns),
+
+        maplist(labeling([value(myRandomSel)]), Columns),
+
+        convertToDoppel(Columns, Doppel),
+        write('Puzzle generated (Column Sum | Row Sum | Solution)'), nl,
+        write(Doppel), nl, nl.
+
+myRandomSel(Var, _Rest, BB, BB1) :-
+        fd_set(Var, Set),
+        findall(Value, fdset_member(Value, Set), List),
+        length(List, Len),
+        random(0, Len, Number),
+        nth0(Number, List, NewValue),
+        (   
+           first_bound(BB, BB1), Var #= NewValue
+        ;   
+           later_bound(BB, BB1), Var #\= NewValue
+        ).
+
+genBoardArcs(0, ListBuild, ListBuild).
+
+genBoardArcs(N, ListBuild, List) :-
+        N > 0,
+        append(ListBuild, [arc(q0,N,q0), arc(q1,N,q2), arc(q2,N,q2), arc(q3,N,q3)], NewList),
+        NewN is N - 1,
+        genBoardArcs(NewN, NewList, List).
+
+noConsecutiveBlackCells(Line) :-
+        length(Line, N), NewN #= N-2,
+        genBoardArcs(NewN, [arc(q0,0,q1), arc(q2,0,q3)], List),
+        automaton(Line, [source(q0), sink(q3)], List).
+
+/**************************************************************************
+                    Convert generated board to puzzle
+***************************************************************************/
+
+convertToDoppel(List, Doppel) :-
+        buildSumList(List, [], RowSum),
+        transpose(List, TList),
+        buildSumList(TList, [], ColumnSum),
+        append([ColumnSum], [RowSum], CRList),
+        append(CRList, [_], Doppel).
+
+buildSumList([], ListBuild, ListBuild).
+
+buildSumList([H|T], ListBuild, SumList) :-
+        nth0(ZeroIndex, H, 0), %Find first black cell
+        Index is ZeroIndex + 1,
+        getListBetweenBlackCells(H, Index, [], ListToSum),
+        sumlist(ListToSum, Sum),
+        append(ListBuild, [Sum], NewList),
+        buildSumList(T, NewList, SumList).
+
+getListBetweenBlackCells(Line, Index, ListBuild, FinalList) :-
+        nth0(Index, Line, Value),
+        Value \= 0, !,
+        append(ListBuild, [Value], NewList),
+        NewIndex is Index + 1,
+        getListBetweenBlackCells(Line, NewIndex, NewList, FinalList).
+
+getListBetweenBlackCells(_, _, ListBuild, ListBuild).
 
 /**************************************************************************
                               Restrictions
@@ -118,14 +179,10 @@ sumInLine(Line, Value):-
         getArc(NewN, [arc(q0,0,q1), arc(q1,0,q2)], List, Counter),
         automaton(Line, _, Line, [source(q0), sink(q2)], List, [Counter], [0], [Value]).
 
-test_board([
-              [4, 8, 4, 5, 6, 5], % Column Sum
-              [9, 7, 2, 10, 3, 1], % Row Sum
-              _ % Map
-           ]).
+reset_time :- statistics(walltime,_).
 
-reset_timer :- statistics(walltime,_).
-print_time :-
-        statistics(walltime,[_,T]),
-        TS is ((T//10)*10)/1000,
-        nl, write('Time: '), write(TS), write('s'), nl, nl.
+get_time(TS) :-
+        statistics(walltime, [_,T]),
+        TS is ((T // 10) * 10) / 1000.
+
+print_time(TS) :- write('Time: '), write(TS), write('s'), nl.
