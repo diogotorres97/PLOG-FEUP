@@ -1,4 +1,4 @@
-:- include('board.pl'). %Boards used for testing
+:- include('testBoards.pl'). %Boards used for testing
 
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
@@ -6,10 +6,18 @@
 
 :- dynamic cardinalityList/1.
 
+/**************************************************************************
+                            Entry point / Menus
+***************************************************************************/
+
 doppelBlock(Size) :-
-        
+
         generateDoppel(Size, Doppel),
         solveDoppel(Doppel).
+
+/**************************************************************************
+                            Doppelblock solver
+***************************************************************************/
 
 solveDoppel([CSum, RSum, Rows]) :-
 
@@ -20,33 +28,31 @@ solveDoppel([CSum, RSum, Rows]) :-
 
         defineDomain(N, Rows),
 
-        %first restrition
+        %first restrition TODO which is?
         defineCardinality(N, Rows),
 
-        %second restrition
-        eachRowBlacken(Rows),
+        %second restrition TODO which is?
+        restrictBlackCells(Rows),
         transpose(Rows, Columns),
-        eachRowBlacken(Columns),
+        restrictBlackCells(Columns),
 
-        %third restrition
-	maplist(sumInLine, Rows, RSum),
-	maplist(sumInLine, Columns, CSum),
+        %third restrition TODO which is?
+	maplist(restrictSumInLine, Rows, RSum),
+	maplist(restrictSumInLine, Columns, CSum),
 
-        reset_time, !,
+        resetTime, !,
         maplist(labeling([bisect, down]), Columns),
-        get_time(Time),
+        getTime(Time),
         
         write('Puzzle solved:'), nl,
-        maplist(writeBoard, Columns), nl,
-        print_time(Time).
-
-writeBoard(Line) :-
-        write(Line), nl.
+        maplist(printLine, Columns), nl,
+        printTime(Time).
 
 /**************************************************************************
                             Board generation
 ***************************************************************************/
 
+% Generates a Doppelblock puzzle of given Size (4x4 upwards)
 generateDoppel(Size, Doppel) :-
 
         retractall(cardinalityList(_)),
@@ -55,14 +61,15 @@ generateDoppel(Size, Doppel) :-
 
         defineDomain(Size, Rows),
 
-        %first restrition
+        %TODO same as solver
         defineCardinality(Size, Rows),
 
-        %second restrition
-        eachRowBlacken(Rows),
+        %TODO same as solver
+        restrictBlackCells(Rows),
         transpose(Rows, Columns),
-        eachRowBlacken(Columns),
+        restrictBlackCells(Columns),
 
+        % Restrict black cells so they can't be consecutive
         maplist(noConsecutiveBlackCells, Rows),
         maplist(noConsecutiveBlackCells, Columns),
 
@@ -72,6 +79,7 @@ generateDoppel(Size, Doppel) :-
         write('Puzzle generated (Column Sum | Row Sum | Solution)'), nl,
         write(Doppel), nl, nl.
 
+% Select a random solution for generating a different board each try
 myRandomSel(Var, _Rest, BB, BB1) :-
         fd_set(Var, Set),
         findall(Value, fdset_member(Value, Set), List),
@@ -84,23 +92,11 @@ myRandomSel(Var, _Rest, BB, BB1) :-
            later_bound(BB, BB1), Var #\= NewValue
         ).
 
-genBoardArcs(0, ListBuild, ListBuild).
-
-genBoardArcs(N, ListBuild, List) :-
-        N > 0,
-        append(ListBuild, [arc(q0,N,q0), arc(q1,N,q2), arc(q2,N,q2), arc(q3,N,q3)], NewList),
-        NewN is N - 1,
-        genBoardArcs(NewN, NewList, List).
-
-noConsecutiveBlackCells(Line) :-
-        length(Line, N), NewN #= N-2,
-        genBoardArcs(NewN, [arc(q0,0,q1), arc(q2,0,q3)], List),
-        automaton(Line, [source(q0), sink(q3)], List).
-
 /**************************************************************************
                     Convert generated board to puzzle
 ***************************************************************************/
 
+% Builds a list of values between black cells, sums them into a list with the column sum and row sum needed for a Doppelblock puzzle
 convertToDoppel(List, Doppel) :-
         buildSumList(List, [], RowSum),
         transpose(List, TList),
@@ -131,20 +127,17 @@ getListBetweenBlackCells(_, _, ListBuild, ListBuild).
                               Restrictions
 ***************************************************************************/
 
-% Create a bidimensional matrix NxN
-getInitialBoard(N, Board):-
-        length(Board, N),
-        maplist(same_length(Board), Board).
-
+% TODO what do?
 defineDomain(N, Rows):-
-        MaxN #= N-2,
+        MaxN #= N - 2,
         maplist(define_domain(MaxN), Rows).
 
 define_domain(MaxN,X):- domain(X, 0, MaxN).
 
+% TODO what do?
 defineCardinality(N, Rows) :-
-        createCardinality(N,1,[0-2], Lista),
-        assert(cardinalityList(Lista)),
+        createCardinality(N, 1, [0-2], List),
+        assert(cardinalityList(List)),
         maplist(define_Cardinality, Rows),
         transpose(Rows, Columns),
         maplist(define_Cardinality, Columns).
@@ -153,36 +146,76 @@ define_Cardinality(X) :-
         cardinalityList(Lista),
         global_cardinality(X,Lista).
 
-createCardinality(Length,Counter, Lista,Lista):- Counter is Length - 1.
-createCardinality(Length,Counter,Temp, Lista) :-
-        append([Counter-1], Temp, Temp2),
+% TODO what do?
+createCardinality(Length, Counter, List, List) :- Counter is Length - 1.
+
+createCardinality(Length, Counter, Temp, List) :-
+        append([Counter - 1], Temp, Temp2),
         Counter =< Length - 2,
-        Tmp is Counter+1,
-        createCardinality(Length,Tmp, Temp2,Lista).
+        Tmp is Counter + 1,
+        createCardinality(Length, Tmp, Temp2, List).
 
-eachRowBlacken(Rows):-
-        maplist(countEachRowBlacken, Rows).
+% TODO what do?
+restrictBlackCells(List) :-
+        maplist(restrictBlackCellCount, List).
 
-countEachRowBlacken(X):-
-        count(0,X,#=,2).
+restrictBlackCellCount(X) :-
+        count(0, X, #=, 2).
 
-getArc(0,Temp,Temp,_).
+% TODO what do?
+sumArcs(0, Temp, Temp, _).
 
-getArc(N,Temp, List, Counter) :-
+sumArcs(N, Temp, List, Counter) :-
         N > 0,
-        append(Temp, [arc(q0,N,q0), arc(q1,N,q1,[Counter+N]), arc(q2,N,q2)], NewList),
-        NewN is N-1,
-        getArc(NewN, NewList, List, Counter).
+        append(Temp, [arc(q0,N,q0), arc(q1, N, q1, [Counter + N]), arc(q2, N, q2)], NewList),
+        NewN is N - 1,
+        sumArcs(NewN, NewList, List, Counter).
 
-sumInLine(Line, Value):-
+% TODO what do?
+restrictSumInLine(Line, Value):-
         length(Line,N), NewN #= N-2,
-        getArc(NewN, [arc(q0,0,q1), arc(q1,0,q2)], List, Counter),
+        sumArcs(NewN, [arc(q0,0,q1), arc(q1,0,q2)], List, Counter),
         automaton(Line, _, Line, [source(q0), sink(q2)], List, [Counter], [0], [Value]).
 
-reset_time :- statistics(walltime,_).
+% Finished building automaton
+genBoardArcs(0, ListBuild, ListBuild).
 
-get_time(TS) :-
+% Automaton state transitions needed to assure no 2 black cells are placed consecutively
+genBoardArcs(N, ListBuild, List) :-
+        N > 0,
+        append(ListBuild, [arc(q0, N, q0), arc(q1, N, q2), arc(q2, N, q2), arc(q3, N, q3)], NewList),
+        NewN is N - 1,
+        genBoardArcs(NewN, NewList, List).
+
+% Restricts black cells so they can't be consecutive
+noConsecutiveBlackCells(Line) :-
+        length(Line, N), NewN #= N - 2,
+        genBoardArcs(NewN, [arc(q0, 0, q1), arc(q2, 0, q3)], List),
+        automaton(Line, [source(q0), sink(q3)], List).
+
+/**************************************************************************
+                            Utility predicates
+***************************************************************************/
+
+% Create a NxN matrix
+getInitialBoard(N, Board) :-
+        length(Board, N),
+        maplist(same_length(Board), Board).
+
+% Writes line from list
+printLine(Line) :-
+        write(Line), nl.
+
+% Clear console
+clearConsole :- write('\33\[2J').
+
+% Reset time
+resetTime :- statistics(walltime, _).
+
+% Get time elapsed in seconds
+getTime(TS) :-
         statistics(walltime, [_,T]),
         TS is ((T // 10) * 10) / 1000.
 
-print_time(TS) :- write('Time: '), write(TS), write('s'), nl.
+% Print time elapsed since last "reset_time" call
+printTime(TS) :- write('Time: '), write(TS), write('s'), nl.
