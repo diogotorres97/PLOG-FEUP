@@ -32,13 +32,9 @@ solveDoppel([CSum, RSum, Rows]) :-
 		%exactly  two cells blackened  and  each  number(between 1 and N-2)  appears  exactly  once
         defineCardinality(N, Rows),
 
-        %second restrition - exactly two cells are blackened
-        restrictBlackCells(Rows),
-        transpose(Rows, Columns),
-        restrictBlackCells(Columns),
-
-        %third restrition - sum of the numbers between the two black cells in the row and column corresponds to a specific value
+        %second restrition - sum of the numbers between the two black cells in the row and column corresponds to a specific value
 		maplist(restrictSumInLine, Rows, RSum),
+		transpose(Rows, Columns),
 		maplist(restrictSumInLine, Columns, CSum),
 
         resetTime, !,
@@ -66,13 +62,9 @@ generateDoppel(Size, Doppel) :-
 		%exactly two cells blackened and each number(between 1 and N-2) appears exactly once
         defineCardinality(Size, Rows),
 
-        %exactly  two cells are blackened
-        restrictBlackCells(Rows),
-        transpose(Rows, Columns),
-        restrictBlackCells(Columns),
-
         % Restrict black cells so they can't be consecutive
         maplist(noConsecutiveBlackCells, Rows),
+		transpose(Rows, Columns),
         maplist(noConsecutiveBlackCells, Columns),
 
         maplist(labeling([value(myRandomSel)]), Columns),
@@ -156,13 +148,6 @@ createCardinality(Length, Counter, Temp, List) :-
         Counter =< Length - 2,
         Tmp is Counter + 1,
         createCardinality(Length, Tmp, Temp2, List).
-
-% For each row and each column put exactly two cells blackened
-restrictBlackCells(List) :-
-        maplist(restrictBlackCellCount, List).
-
-restrictBlackCellCount(X) :-
-        count(0, X, #=, 2).
 
 % Finished building automaton
 sumArcs(0, Temp, Temp, _).
