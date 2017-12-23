@@ -10,16 +10,175 @@
                             Entry point / Menus
 ***************************************************************************/
 
-doppelBlock(Size) :-
+% Program entry point, queries user about board size and type and then presents solution
+doppelBlock :-
 
-        generateDoppel(Size, Doppel),
-        solveDoppel(Doppel).
+        doppelTypeMenu(Type),
+        doppelBoardMenu(Type, Doppel),
+
+        clearConsole,
+        printDoppelPuzzle(Doppel), nl,
+        solveDoppel(Doppel, Solution, Time),
+        printDoppelSolution(Doppel, Solution), nl,
+        printTime(Time).
+
+% Query user for type of doppel puzzle to use (premade or generated)
+doppelTypeMenu(Type) :-
+        
+        repeat,
+        clearConsole,
+        
+        write('Choose type of puzzle:'), nl,
+        write('1 - premade'), nl,
+        write('2 - generated'), nl,
+        read_line(Input),
+        registerType(Input, Type).
+        
+% Validate user doppel type selection and store it
+registerType("1", premade).
+registerType("2", generated).
+
+% Queries user for premade board size to solve
+doppelBoardMenu(premade, Doppel) :-
+        
+        repeat,
+        clearConsole,
+        
+        write('Premade puzzle size?'), nl,
+        write('1 - Size 4'), nl,
+        write('2 - Size 5'), nl,
+        write('3 - Size 6'), nl,
+        write('4 - Size 7'), nl,
+        write('5 - Size 8'), nl,
+        read_line(Input),
+        registerBoard(premade, Input, Doppel).
+
+% Queries user for generated board size
+doppelBoardMenu(generated, Doppel) :-
+        
+        repeat,
+        clearConsole,
+        
+        write('Puzzle size to generate:'), nl,
+        write('1 - Size 4'), nl,
+        write('2 - Size 5'), nl,
+        write('3 - Size 6'), nl,
+        write('4 - Size 7'), nl,
+        write('5 - Size 8'), nl,
+        write('6 - Size 9'), nl,
+        write('7 - Size 10'), nl,
+        read_line(Input),
+        registerBoard(generated, Input, Doppel).
+
+% Validates user premade board size selection and unifies with premade boards
+registerBoard(premade, "1", Doppel) :- boardS4(X), Doppel = X.
+registerBoard(premade, "2", Doppel) :- boardS5(X), Doppel = X.
+registerBoard(premade, "3", Doppel) :- boardS6(X), Doppel = X.
+registerBoard(premade, "4", Doppel) :- boardS7(X), Doppel = X.
+registerBoard(premade, "5", Doppel) :- boardS8(X), Doppel = X.
+
+% Validates user generated board size selection and generates the board
+registerBoard(generated, "1", Doppel) :- generateDoppel(4, Doppel).
+registerBoard(generated, "2", Doppel) :- generateDoppel(5, Doppel).
+registerBoard(generated, "3", Doppel) :- generateDoppel(6, Doppel).
+registerBoard(generated, "4", Doppel) :- generateDoppel(7, Doppel).
+registerBoard(generated, "5", Doppel) :- generateDoppel(8, Doppel).
+registerBoard(generated, "6", Doppel) :- generateDoppel(9, Doppel).
+registerBoard(generated, "7", Doppel) :- generateDoppel(10, Doppel).
+
+/**************************************************************************
+                           Doppelblock display
+***************************************************************************/
+
+% Prints the doppel board in a human friendly way
+printDoppelPuzzle(Doppel) :-
+        
+        nth0(0, Doppel, CSum),
+        nth0(1, Doppel, RSum),
+        
+        write('Doppelblock:'), nl,
+        write('   '),
+        
+        % Prints column sum with even spacing
+        maplist(printSpaced, CSum), nl,
+        
+        length(RSum, Len),
+        
+        % Create list of dots with the same size as the board
+        length(Solution, Len),
+        maplist(listToDot, Solution),
+        
+        printDoppelLine(RSum, Solution).
+
+% Prints the doppel solution in a human friendly way
+printDoppelSolution(Doppel, Solution) :-
+        
+        nth0(0, Doppel, CSum),
+        nth0(1, Doppel, RSum),
+        
+        write('Doppelblock solution:'), nl,
+        write('   '),
+        
+        % Prints column sum with even spacing
+        maplist(printSpaced, CSum), nl,
+        
+        % Prints row sum and solution lines
+        printDoppelSolutionLine(RSum, Solution).
+
+% Converts list to ASCII '.'
+listToDot(Element) :-
+        Element = '.'.
+
+% Prints a formatted doppelblock solution line
+printDoppelSolutionLine([], []).
+
+printDoppelSolutionLine([HSum|TSum], [HSol|TSol]) :-
+        formatRowSum(HSum),
+        maplist(printSpaced, HSol), nl,
+        printDoppelSolutionLine(TSum, TSol).
+
+% Prints a formatted doppelblock puzzle line
+printDoppelLine([], _).
+
+printDoppelLine([HSum|TSum], Solution) :-
+        formatRowSum(HSum),
+        maplist(printSpaced, Solution), nl,
+        printDoppelLine(TSum, Solution).
+
+% Pads row sum to align elements according to number of digits
+formatRowSum(Number) :-
+        Number > 9, !,
+        write(Number), write(' ').
+
+formatRowSum(Number) :-
+        write(Number), write('  ').
+
+% Converts and pads solution numbers
+formatNumber(Number) :-
+        Number > 9, !,
+        write(Number), write(' ').
+
+formatNumber(Number) :-
+        Number == 0, !,
+        write('.'), write('  ').
+
+formatNumber(Number) :-
+        write(Number), write('  ').
+
+% Prints a list with one space per element, adds padding if number
+printSpaced(Element) :-
+        number(Element), !,
+        formatNumber(Element).
+
+printSpaced(Element) :-
+        write(Element), write('  ').
 
 /**************************************************************************
                             Doppelblock solver
 ***************************************************************************/
 
-solveDoppel([CSum, RSum, Rows]) :-
+% Solves a Doppelblock puzzle
+solveDoppel([CSum, RSum, Rows], Solution, Time) :-
 
         retractall(cardinalityList(_)),
 
@@ -28,22 +187,21 @@ solveDoppel([CSum, RSum, Rows]) :-
 
         defineDomain(N, Rows),
 
-        %first restrition - in  each  row  and  each  column restrict to 
-		%exactly  two cells blackened  and  each  number(between 1 and N-2)  appears  exactly  once
+        % First restrition - in each row and column restrict to
+	% exactly two black cells and one of each number between 1 and N - 2
         defineCardinality(N, Rows),
 
-        %second restrition - sum of the numbers between the two black cells in the row and column corresponds to a specific value
-		maplist(restrictSumInLine, Rows, RSum),
-		transpose(Rows, Columns),
-		maplist(restrictSumInLine, Columns, CSum),
+        % Second restrition - in each row and column restrict the sum
+        % of the numbers between the black cells to a specific value
+        maplist(restrictSumInLine, Rows, RSum),
+	transpose(Rows, Columns),
+	maplist(restrictSumInLine, Columns, CSum),
 
         resetTime, !,
         maplist(labeling([bisect, down]), Columns),
         getTime(Time),
         
-        write('Puzzle solved:'), nl,
-        maplist(printLine, Columns), nl,
-        printTime(Time).
+        Solution = Columns.
 
 /**************************************************************************
                             Board generation
@@ -58,22 +216,21 @@ generateDoppel(Size, Doppel) :-
 
         defineDomain(Size, Rows),
 
-        %first restrition - in each row and each column restrict to
-		%exactly two cells blackened and each number(between 1 and N-2) appears exactly once
+        % First restrition - in each row and column restrict to
+        % exactly two black cells and one of each number between 1 and N - 2
         defineCardinality(Size, Rows),
 
-        % Restrict black cells so they can't be consecutive
+        % Second restrition - in each row and column restrict
+        % black cells so they can't be consecutive
         maplist(noConsecutiveBlackCells, Rows),
-		transpose(Rows, Columns),
+        transpose(Rows, Columns),
         maplist(noConsecutiveBlackCells, Columns),
 
         maplist(labeling([value(myRandomSel)]), Columns),
 
-        convertToDoppel(Columns, Doppel),
-        write('Puzzle generated (Column Sum | Row Sum | Solution)'), nl,
-        write(Doppel), nl, nl.
+        convertToDoppel(Columns, Doppel).
 
-% Select a random solution for generating a different board each try
+% Select a random solution for generating a different board each attempt
 myRandomSel(Var, _Rest, BB, BB1) :-
         fd_set(Var, Set),
         findall(Value, fdset_member(Value, Set), List),
@@ -121,14 +278,14 @@ getListBetweenBlackCells(_, _, ListBuild, ListBuild).
                               Restrictions
 ***************************************************************************/
 
-% Define domain of each variable to values between 0 and N-2
+% Define domain of each variable to values between 0 and N - 2
 defineDomain(N, Rows):-
         MaxN #= N - 2,
         maplist(define_domain(MaxN), Rows).
 
 define_domain(MaxN,X):- domain(X, 0, MaxN).
 
-% For each row and each column put exactly two cells black and each number between 1 and N-2 appears exactly once
+% For each row and column restrict to exactly two black cells and one of each number between 1 and N - 2
 defineCardinality(N, Rows) :-
         createCardinality(N, 1, [0-2], List),
         assert(cardinalityList(List)),
@@ -140,7 +297,7 @@ define_Cardinality(X) :-
         cardinalityList(Lista),
         global_cardinality(X,Lista).
 
-% Creates the Cardinality List in format [0-2,1-1,2-1,...,(N-2)-1]
+% Creates the Cardinality List in format [0-2, 1-1, 2-1, ..., (N-2)-1]
 createCardinality(Length, Counter, List, List) :- Counter is Length - 1.
 
 createCardinality(Length, Counter, Temp, List) :-
