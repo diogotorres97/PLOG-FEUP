@@ -106,16 +106,24 @@ printDoppelPuzzle(Doppel) :-
         nth0(1, Doppel, RSum),
         
         write('Doppelblock:'), nl,
-        write('   '),
+        write('  | '),
         
         % Prints column sum with even spacing
         maplist(printSpaced, CSum), nl,
+        
+        % Hyphen padding
+        length(CSum, Len),
+        HyphenN is Len * 3,
+        length(Hyphen, HyphenN),
+        maplist(listToASCII('-'), Hyphen),
+        write('--o'),
+        maplist(write, Hyphen), nl,
         
         length(RSum, Len),
         
         % Create list of dots with the same size as the board
         length(Solution, Len),
-        maplist(listToDot, Solution),
+        maplist(listToASCII('.'), Solution),
         
         printDoppelLine(RSum, Solution).
 
@@ -126,17 +134,25 @@ printDoppelSolution(Doppel, Solution) :-
         nth0(1, Doppel, RSum),
         
         write('Doppelblock solution:'), nl,
-        write('   '),
+        write('  | '),
         
         % Prints column sum with even spacing
         maplist(printSpaced, CSum), nl,
         
+        % Hyphen padding
+        length(CSum, Len),
+        HyphenN is Len * 3,
+        length(Hyphen, HyphenN),
+        maplist(listToASCII('-'), Hyphen),
+        write('--o'),
+        maplist(write, Hyphen), nl,
+        
         % Prints row sum and solution lines
         printDoppelSolutionLine(RSum, Solution).
 
-% Converts list to ASCII '.'
-listToDot(Element) :-
-        Element = '.'.
+% Converts list to ASCII element
+listToASCII(Element, ASCII) :-
+        Element = ASCII.
 
 % Prints a formatted doppelblock solution line
 printDoppelSolutionLine([], []).
@@ -157,10 +173,10 @@ printDoppelLine([HSum|TSum], Solution) :-
 % Pads row sum to align elements according to number of digits
 formatRowSum(Number) :-
         Number > 9, !,
-        write(Number), write(' ').
+        write(Number), write('| ').
 
 formatRowSum(Number) :-
-        write(Number), write('  ').
+        write(Number), write(' | ').
 
 % Converts and pads solution numbers
 formatNumber(Number) :-
