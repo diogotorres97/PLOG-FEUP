@@ -198,10 +198,10 @@ solveDoppel([CSum, RSum, Rows], Solution, Time) :-
 	maplist(restrictSumInLine, Columns, CSum),
 
         resetTime, !,
-        maplist(labeling([bisect, down]), Columns),
+        maplist(labeling([bisect, down]), Rows),
         getTime(Time),
         
-        Solution = Columns.
+        Solution = Rows.
 
 /**************************************************************************
                             Board generation
@@ -226,9 +226,9 @@ generateDoppel(Size, Doppel) :-
         transpose(Rows, Columns),
         maplist(noConsecutiveBlackCells, Columns),
 
-        maplist(labeling([value(myRandomSel)]), Columns),
+        maplist(labeling([value(myRandomSel)]), Rows),
 
-        convertToDoppel(Columns, Doppel).
+        convertToDoppel(Rows, Doppel).
 
 % Select a random solution for generating a different board each attempt
 myRandomSel(Var, _Rest, BB, BB1) :-
