@@ -22,6 +22,15 @@ doppelBlock :-
         printDoppelSolution(Doppel, Solution), nl,
         printTime(Time).
 
+% Alternate entry point, allows using a custom board
+doppelBlock(Doppel) :-
+        
+        clearConsole,
+        printDoppelPuzzle(Doppel), nl,
+        solveDoppel(Doppel, Solution, Time),
+        printDoppelSolution(Doppel, Solution), nl,
+        printTime(Time).
+
 % Query user for type of doppel puzzle to use (premade or generated)
 doppelTypeMenu(Type) :-
         
