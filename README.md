@@ -1,8 +1,4 @@
 # PLOG-FEUP
-
-Repository to host Logic Programming projects.
-
-PLOG is a course given at the FEUP in the 3rd year of the MIEIC.
  
 ## Project 1
 In this project we implemented, in Prolog, a [Froglet](http://brainking.com/en/GameRules?tp=54) game for two players, accordingly to the rules designed by the original creator.
